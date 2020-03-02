@@ -1,0 +1,7 @@
+sampler:
+  name: test
+  verbose: TRUE
+  checkpoint_interval: 10
+  iterations: 100
+  burn: 1
+  description: Short run of Gibbs sampler for quickly getting sampler output.

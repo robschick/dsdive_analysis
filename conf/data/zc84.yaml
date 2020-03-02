@@ -1,0 +1,13 @@
+data:
+  name: zc84
+  path: data/zc84
+  file_patterns:
+    dive: dive
+    depths: depths
+  description: |
+    Deep dives (dives over 1,000m) from zc84.  Dives are stored in separate
+    files, but observations are timestamped so that the dataset could support
+    sequential modeling.  However, the dataset does not contain all deep dives
+    from zc84; the dataset only includes deep dives that meet certain quality
+    standards.  The dives are also preprocessed so that the observations all use
+    the same exact depth bins.

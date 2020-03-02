@@ -1,0 +1,12 @@
+observation_model:
+  name: beta_systematic
+  parameters:
+    shape1: 1
+    shape2: 1
+  description: |
+    Dives are observed according to a systematic sampling design.  Observations
+    are made at times t_i = t0 + eps + (i-1) * dt, where the dive begins at
+    t0 = 0, eps = 2 * tstep * B - tstep where B ~ Beta(a,b), and dt is the time
+    between observations.  Observations at times before t0 are ignored, and the
+    offset eps is unknown.  The distribution for eps is a scaled and shifted
+    beta distribution.

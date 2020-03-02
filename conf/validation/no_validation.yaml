@@ -1,0 +1,4 @@
+validation:
+  name: no_validation
+  holdout: false
+  description: Fit model to entire dataset

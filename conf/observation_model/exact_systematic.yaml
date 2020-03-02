@@ -1,0 +1,11 @@
+observation_model:
+  name: exact_systematic
+  parameters:
+    shape1: NULL
+    shape2: NULL
+  description: |
+    Dives are observed according to a systematic sampling design.  Observations
+    are made at times t_i = t0 + eps + (i-1) * dt, where the dive begins at
+    t0 = 0, eps is a constant, and dt is the time between
+    observations.  Observations at times before t0 are ignored, and the offset
+    eps is assumed to be 0.

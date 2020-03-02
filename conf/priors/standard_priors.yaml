@@ -1,0 +1,3 @@
+sampler:
+  name: standard_priors
+  description: Placeholder for specifying priors via config files.

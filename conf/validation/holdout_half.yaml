@@ -1,0 +1,9 @@
+validation:
+  name: holdout_half
+  holdout: true
+  proportion: .5
+  seed: 2020
+  description: |
+    Fit model to half of the available dives.  By default, only one training and
+    testing partition is created, and the partitions are created at random. Seed
+    is set for simpler reproducibility.

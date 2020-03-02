@@ -1,0 +1,9 @@
+subset:
+  name: longer_dives
+  duration_min: 3600
+  duration_max: Inf
+  bin_start_max: 1
+  bin_end_max: 1
+  description: |
+    Only analyze dives longer than 60 minutes that begin and end in the
+    surface bin.

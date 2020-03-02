@@ -1,0 +1,8 @@
+*.png
+*.Rproj*
+*.RData
+.Rhistory
+*.csv
+.gitattributes
+*.Rout
+output/

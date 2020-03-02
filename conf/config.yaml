@@ -1,0 +1,23 @@
+project: CTDS models for discrete-space deep dives
+
+defaults:
+  data: zc84
+  subset: all_dives
+  validation: no_validation
+  observation_model: uniform_systematic
+  priors: standard_priors
+  sampler: test
+
+base_paths: # main output directory to save fits and figures from model runs
+  fit: output
+
+sub_paths: # created under the output directory for each model run
+  figures: figures
+  posterior_predictions: posterior_predictions
+
+base_names: # files containing analysis artifacts/output
+  fit: sampler_trace.RData  # MCMC chain from gibbs sampler over model params.
+  fit_inds: fit_inds.RData  # indices that partition data into test/train sets
+  posterior_predictions:
+    file: samples_X.RData   # posterior predictive distribution draws
+    index_pattern: X        # character to replace with sample indices
