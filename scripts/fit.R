@@ -65,8 +65,9 @@ fit.inds = fit.ind.fn(dives.obs = dives.obs,
                       duration_max = cfg$subset$duration_max, 
                       holdout = cfg$validation$holdout, 
                       seed = cfg$validation$seed, 
-                      holdout_prop = cfg$validation$proportion)
-
+                      holdout_prop = cfg$validation$proportion,
+                      bin_start_max = cfg$subset$bin_start_max,
+                      bin_end_max = cfg$subset$bin_end_max)
 
 
 #
