@@ -27,7 +27,8 @@ rm(groups)
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
-                    cfg$validation$name, cfg$priors$name)
+                    cfg$validation$name, cfg$observation_model$name, 
+                    cfg$priors$name)
 dir.create(out.dir, recursive = TRUE)
 
 # load data and utility functions
@@ -197,7 +198,6 @@ dump_on_error <- function() {
 }
 options(error = dump_on_error)
 
-# devtools::document('../../../../r/packages/dsdive/')
 fit = dsdive.gibbs.obs(
   dsobs.list = dives.obs.list[fit.inds$fit], 
   t.stages.list = t.stages.list[fit.inds$fit], 
