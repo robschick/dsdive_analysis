@@ -1,8 +1,8 @@
 # configuration tools
-library(composr, lib.loc = c('.', .libPaths()))
-library(yaml, lib.loc = c('.', .libPaths()))
+library(composr, lib.loc = c('singularity/libs', .libPaths()))
+library(yaml, lib.loc = c('singularity/libs', .libPaths()))
 # modeling tools
-library(dsdive, lib.loc = c('.', .libPaths()))
+library(dsdive, lib.loc = c('singularity/libs', .libPaths()))
 library(MASS)
 
 
