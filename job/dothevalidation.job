@@ -10,7 +10,7 @@
 
 date
 START=`date +%s`
-singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(validation="holdout_half", sampler="prod")' scripts/fit.R
+singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(validation="holdout_half",sampler="prod")' "scripts/fit.R"
 END=`date +%s`
 date
 
