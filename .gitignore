@@ -5,3 +5,4 @@
 .gitattributes
 *.Rout
 output/
+.Rproj.user
