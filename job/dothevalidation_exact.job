@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name unif_validation
+#SBATCH --job-name exact_validation
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL
@@ -10,7 +10,7 @@
 
 date
 START=`date +%s`
-singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(validation="holdout_half",observation_model="exact_systematic",sampler="prod")' "scripts/fit.R"
+singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(validation="holdout_half",observation_model="exact_systematic",sampler="prod")' "scripts/fit.R" fit_${SLURM_JOB_NAME}.Rout
 END=`date +%s`
 date
 
