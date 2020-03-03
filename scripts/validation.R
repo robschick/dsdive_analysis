@@ -29,7 +29,7 @@ if(length(args)>0) {
 }
 rm(args,i)
 
-groups = list(validation = 'holdout_half', sampler = 'prod')
+groups=list(validation="holdout_half",observation_model="exact_systematic",sampler="prod")
 
 
 # build configuration
@@ -38,7 +38,8 @@ rm(groups)
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
-                    cfg$validation$name, cfg$priors$name)
+                    cfg$validation$name, cfg$observation_model$name, 
+                    cfg$priors$name)
 
 # load data and utility functions
 source(file.path('scripts', 'utils', 'datafns.R'))
@@ -197,6 +198,51 @@ postpred.depthseq = do.call(rbind, lapply(1:n.samples, function(ind) {
 }))
 
 
+
+#
+# chisq gof test formatting
+#
+
+chisq.gof = function(df, var, verbose = TRUE) {
+  
+  # extract estimate of posterior predictive distribution
+  prob = df %>% filter(series=='Post. Predictive') %>% ungroup() 
+  
+  # extract validation samples
+  obs = df %>% filter(series=='Empirical Validation') %>% ungroup() 
+  
+  # compute support, and merge data; replace missing items with 0
+  df.chisq = data.frame(support = sort(unique(c(prob[var] %>% unlist(), 
+                                                obs[var] %>% unlist())))) %>% 
+    left_join(prob %>% select(var, prob), by = c('support' = var)) %>% 
+    left_join(obs %>% select(var, n), by = c('support' = var)) %>% 
+    mutate_all(~replace(., which(is.na(.)), 0))
+  
+  colnames(df.chisq)[3] = 'observed'
+  
+  # run chisq test
+  res = chisq.test(x = df.chisq$observed, p = df.chisq$prob)
+  
+  if(verbose) {
+    df.chisq$expected = round(res$expected)
+    
+    cat("==================================\n")
+    cat("Chi-squared goodness of fit test\n")
+    cat("==================================\n")
+    
+    cat("\n")
+    
+    print(c(res$statistic, res$parameter, p=res$p.value))
+    
+    cat("\n")
+    
+    print(df.chisq)
+  }
+  
+  res
+}
+
+
 #
 # plots and information
 #
@@ -214,7 +260,6 @@ burn = 1:cfg$sampler$burn
 min_dur = cfg$subset$duration_min
 max_dur = cfg$subset$duration_max
 bin_start_max = cfg$subset$bin_start_max
-
 
 
 #
@@ -268,15 +313,9 @@ pl = ggplot(df, aes(x = max.depth.obs, y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
 ggsave(pl, filename = file.path(o, 'max_observed_depth_cdf.png'), 
        dpi = 'print')
 
-
-res = chisq.test(
-  x = df %>% filter(series=='Empirical Validation') %>% ungroup() %>% 
-    select(n) %>% unlist(),
-  p = df %>% filter(series=='Post. Predictive') %>% ungroup() %>% 
-    select(prob) %>% unlist()
-)
-
-data.frame(observed = res$observed, expected = res$expected)
+sink(file.path(o, paste('max_observed_depth_chisq.txt')))
+r = chisq.gof(df, 'max.depth.obs')
+sink()
 
 
 #
@@ -306,6 +345,7 @@ df = rbind(
            eps = sqrt(log(2/.05)/(2*total))) %>% 
     group_by(duration.obs, series) %>% 
     summarise(prob = n() / total[1],
+              n = n(),
               eps = eps[1]) %>% 
     group_by(series) %>% 
     mutate(cdf = cumsum(prob),
@@ -327,6 +367,10 @@ pl = ggplot(df, aes(x = duration.obs/60, y = cdf, col = series, fill = series,
 
 ggsave(pl, filename = file.path(o, 'observed_duration_cdf.png'), 
        dpi = 'print')
+
+sink(file.path(o, paste('observed_duration_chisq.txt')))
+r = chisq.gof(df, 'duration.obs')
+sink()
 
 
 #
@@ -384,6 +428,13 @@ pl = ggplot(df, aes(x = (depth), y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
 ggsave(pl, filename = file.path(o, 'depths_by_time_cdf.png'), 
        dpi = 'print', width = 14, height = 14)
 
+sink(file.path(o, paste('depths_by_time_chisq.txt')))
+for(s in sort(unique(df$time))[-1]) {
+  r = chisq.gof(df %>% mutate(series = Distribution) %>% 
+                  filter(time==s), 'depth')
+  cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
+}
+sink()
 
 
 #
@@ -402,6 +453,7 @@ df = rbind(
            eps = sqrt(log(2/.05)/(2*total))) %>% 
     pivot_longer(cols = starts_with("dur."), 
                  names_to = 'stage', values_to = 'stage.duration') %>%
+    filter(!is.na(stage.duration)) %>%
     mutate(stage = fct_recode(stage, 
                               'Stage 1' = 'dur.s1',
                               'Stage 2' = 'dur.s2',
@@ -450,3 +502,11 @@ pl = ggplot(df, aes(x = stage.duration/60, y = cdf, ymin = cdf.lwr,
 ggsave(pl, filename = file.path(o, 'stage_duration_cdfs.png'), 
        dpi = 'print')
 
+sink(file.path(o, paste('stage_duration_chisq.txt')))
+for(s in levels(df$stage)) {
+  df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
+    mutate(prob = prob/sum(prob)) %>% ungroup()
+  r = chisq.gof(df2, 'stage.duration')
+  cat(paste("\n(", s," results)\n\n\n", sep=''))
+}
+sink()
