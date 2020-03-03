@@ -13,7 +13,7 @@ TGT=`(cd conf/data/ && ls sim*) | sed -n ${SLURM_ARRAY_TASK_ID}p`
 
 date
 START=`date +%s`
-singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(data="$TGT",observation_model="exact_systematic",priors="simulation_priors",sampler="prod")' "scripts/fit.R" fit_${SLURM_JOB_NAME}.Rout
+singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(data="$TGT",observation_model="exact_systematic",priors="simulation_priors",sampler="prod")' "scripts/fit.R" fit_${SLURM_JOB_NAME}_${SLURM_ARRAY_TASK_ID}.Rout
 END=`date +%s`
 date
 
