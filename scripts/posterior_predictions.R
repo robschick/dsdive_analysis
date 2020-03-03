@@ -23,7 +23,7 @@ if(length(args)>0) {
 }
 rm(args,i)
 
-groups = list(validation = 'holdout_half', sampler = 'prod')
+groups=list(validation="holdout_half",observation_model="uniform_systematic",sampler="prod")
 
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
@@ -31,7 +31,8 @@ rm(groups)
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
-                    cfg$validation$name, cfg$priors$name)
+                    cfg$validation$name, cfg$observation_model$name, 
+                    cfg$priors$name)
 
 # get or create cluster
 cl = getMPIcluster()
@@ -56,7 +57,6 @@ source(file.path('scripts', 'utils', 'datafns.R'))
 dives.obs = dives.load(path = cfg$data$path, 
                        dive_pattern = cfg$data$file_patterns$dive,
                        depth_pattern = cfg$data$file_patterns$depths)
-
 
 
 #
