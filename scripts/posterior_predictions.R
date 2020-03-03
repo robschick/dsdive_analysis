@@ -23,7 +23,7 @@ if(length(args)>0) {
 }
 rm(args,i)
 
-groups=list(validation="holdout_half",observation_model="uniform_systematic",sampler="prod")
+groups=list(validation="holdout_half",observation_model="exact_systematic",sampler="prod")
 
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
@@ -77,14 +77,26 @@ load(file.path(out.dir, cfg$base_names$fit))
 clusterExport(cl, c('cfg', 'out.dir'))
 clusterEvalQ(cl, load(file.path(out.dir, cfg$base_names$fit)))
 
+if(is.null(state$trace)) {
+  state$trace = state$theta
+  state$theta = NULL
+}
+
+if(!('trace.offset' %in% names(state))) {
+  state$trace.offset = state$trace.offsets
+  state$trace.offsets = NULL
+}
+
+clusterExport(cl, 'state')
 
 #
 # sample dives from posterior predictive distribution
 #
 
-# create output directories
+# create and empty output directories
 pred.dir = file.path(out.dir, cfg$sub_paths$posterior_predictions)
 dir.create(path = pred.dir, recursive = TRUE)
+file.remove(dir(pred.dir, full.names = TRUE))
 
 # export additional data to nodes
 clusterExport(cl = cl, c('dives.obs', 'depth.bins', 'tstep', 'pred.dir'))
