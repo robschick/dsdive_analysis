@@ -1,3 +1,4 @@
 sampler:
   name: standard_priors
-  description: Placeholder for specifying priors via config files.
+  description: Use the 85% rule to estimate prior parameters for stage
+    transition times from data.

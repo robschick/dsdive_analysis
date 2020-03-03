@@ -1,0 +1,8 @@
+data:
+  name: sim_base_60
+  path: data/sim/base/observations_60
+  file_patterns:
+    dive: dive
+    depths: depths
+  description: Observations of simulated dives.  Dives are observed every 60 seconds.  Complete
+    dives are stored in ../truth.

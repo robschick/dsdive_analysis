@@ -1,0 +1,4 @@
+sampler:
+  name: simulation_priors
+  description: Pull priors for stage transition times from the subdirectories
+    in which the simulated data are stored.
