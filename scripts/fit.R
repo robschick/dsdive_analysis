@@ -151,8 +151,15 @@ times.stages = do.call(rbind, lapply(dives.obs, function(d) {
              bottom.time.min = diff(t.stages)/60)
 }))
 
-T1.prior = fitdistr(x = times.stages$sub.time.min, densfun = 'gamma')
-T2.prior = fitdistr(x = times.stages$bottom.time.min, densfun = 'gamma')
+if(cfg$priors$name == 'standard_priors') {
+  T1.prior = fitdistr(x = times.stages$sub.time.min, densfun = 'gamma')
+  T2.prior = fitdistr(x = times.stages$bottom.time.min, densfun = 'gamma')
+} else if(cfg$priors$name == 'simulation_priors') {
+  load(file.path(cfg$data$path, '..', 'params', 'params.RData'))
+  T1.prior = list(estimate = params$T1.params)
+  T2.prior = list(estimate = params$T2.params)
+}
+
 
 # # plot priors
 # curve(dbeta(x = x, shape1 = pi1.prior[1], shape2 = pi1.prior[2]), 
