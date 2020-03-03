@@ -29,7 +29,7 @@ if(length(args)>0) {
 }
 rm(args,i)
 
-groups=list(validation="holdout_half",observation_model="exact_systematic",sampler="prod")
+groups=list(validation="holdout_half",observation_model="uniform_systematic",sampler="prod")
 
 
 # build configuration
@@ -317,6 +317,7 @@ sink(file.path(o, paste('max_observed_depth_chisq.txt')))
 r = chisq.gof(df, 'max.depth.obs')
 sink()
 
+save(df, r, file = file.path(o, paste('max_observed_depth.RData')))
 
 #
 # observed duration distributions
@@ -371,6 +372,8 @@ ggsave(pl, filename = file.path(o, 'observed_duration_cdf.png'),
 sink(file.path(o, paste('observed_duration_chisq.txt')))
 r = chisq.gof(df, 'duration.obs')
 sink()
+
+save(df, r, file = file.path(o, paste('observed_duration.RData')))
 
 
 #
@@ -429,12 +432,15 @@ ggsave(pl, filename = file.path(o, 'depths_by_time_cdf.png'),
        dpi = 'print', width = 14, height = 14)
 
 sink(file.path(o, paste('depths_by_time_chisq.txt')))
-for(s in sort(unique(df$time))[-1]) {
-  r = chisq.gof(df %>% mutate(series = Distribution) %>% 
-                  filter(time==s), 'depth')
+r = lapply(sort(unique(df$time))[-1], function(s) {
+  res = chisq.gof(df %>% mutate(series = Distribution) %>% 
+                    filter(time==s), 'depth')
   cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
-}
+  res
+})
 sink()
+
+save(df, r, file = file.path(o, paste('depths_by_time.RData')))
 
 
 #
@@ -503,10 +509,13 @@ ggsave(pl, filename = file.path(o, 'stage_duration_cdfs.png'),
        dpi = 'print')
 
 sink(file.path(o, paste('stage_duration_chisq.txt')))
-for(s in levels(df$stage)) {
+r = lapply(levels(df$stage), function(s) {
   df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
     mutate(prob = prob/sum(prob)) %>% ungroup()
-  r = chisq.gof(df2, 'stage.duration')
+  res = chisq.gof(df2, 'stage.duration')
   cat(paste("\n(", s," results)\n\n\n", sep=''))
-}
+  res
+})
 sink()
+
+save(df, r, file = file.path(o, paste('stage_duration.RData')))
