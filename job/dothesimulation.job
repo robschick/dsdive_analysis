@@ -9,13 +9,13 @@
 #SBATCH --time 48:00:00
 #SBATCH --array 1-6
 
-TGT=`(cd conf/data/ && ls sim*) | sed -n ${SLURM_ARRAY_TASK_ID}p`
+TGT=`(cd conf/data/ && ls sim*) | sed -n ${SLURM_ARRAY_TASK_ID}p | sed -e 's/\..*//'`
 
 echo $TGT
 
 date
 START=`date +%s`
-singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(data="${TGT}",observation_model="exact_systematic",priors="simulation_priors",sampler="prod")' "scripts/fit.R" fit_simulation_${SLURM_ARRAY_TASK_ID}.Rout
+singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH \'--args groups=list(data="$TGT",observation_model="exact_systematic",priors="simulation_priors",sampler="prod")\' "scripts/fit.R" fit_simulation_${SLURM_ARRAY_TASK_ID}.Rout
 END=`date +%s`
 date
 
