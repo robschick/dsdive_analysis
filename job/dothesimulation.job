@@ -15,7 +15,7 @@ echo $TGT
 
 date
 START=`date +%s`
-singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH \'--args groups=list\(data="$TGT",observation_model="exact_systematic",priors="simulation_priors",sampler="prod"\)\' "scripts/fit.R" fit_simulation_${SLURM_ARRAY_TASK_ID}.Rout
+singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH '--args groups=list(data="$TGT",observation_model="exact_systematic",priors="simulation_priors",sampler="prod")' "scripts/fit.R" fit_simulation_${SLURM_ARRAY_TASK_ID}.Rout
 END=`date +%s`
 date
 
