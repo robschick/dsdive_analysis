@@ -1,8 +1,8 @@
 *.png
 *.Rproj*
-*.RData
 .Rhistory
 .gitattributes
+.RData
 *.Rout
 output/
 .Rproj.user
