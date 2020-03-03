@@ -14,6 +14,7 @@ base_paths: # main output directory to save fits and figures from model runs
 sub_paths: # created under the output directory for each model run
   figures: figures
   posterior_predictions: posterior_predictions
+  comparisons: comparisons
 
 base_names: # files containing analysis artifacts/output
   fit: sampler_trace.RData  # MCMC chain from gibbs sampler over model params.
