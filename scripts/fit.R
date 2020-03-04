@@ -54,8 +54,6 @@ t.stages.list = lapply(dives.obs.list, function(d) {
   seq(from = d$times[1], to = d$times[length(d$times)], length.out = 4)[2:3]
 })
 
-tstep = diff(dives.obs[[1]]$dive$times[1:2])
-
 
 #
 # select dives for fitting
@@ -213,7 +211,8 @@ fit = dsdive.gibbs.obs(
   maxit = cfg$sampler$iterations, checkpoint.fn = dump.state, 
   checkpoint.interval = cfg$sampler$checkpoint_interval, 
   pi1.prior = pi1.prior, pi2.prior = pi2.prior, lambda1.prior = lambda1.prior, 
-  lambda2.prior = lambda2.prior, lambda3.prior = lambda3.prior, tstep = tstep, 
+  lambda2.prior = lambda2.prior, lambda3.prior = lambda3.prior, 
+  tstep = cfg$data$tstep, 
   depth.bins = depth.bins, T1.prior.params = T1.prior.params, 
   T2.prior.params = T2.prior.params, max.width = 100, max.width.offset = 60, 
   t0.prior.params = unlist(cfg$observation_model$parameters))
