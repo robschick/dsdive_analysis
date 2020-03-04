@@ -1,6 +1,7 @@
 data:
   name: sim_base_30
   path: data/sim/base/observations_30
+  tstep: 30.0
   file_patterns:
     dive: dive
     depths: depths

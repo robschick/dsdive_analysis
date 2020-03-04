@@ -91,6 +91,7 @@ sim.gen = function(beta, lambda, T1.params, T2.params, N, t.win,
           name = paste(c(strsplit(out.path, '/')[[1]][-1], t.win[i]), 
                        collapse = '_'),
           path = obs.path[i],
+          tstep = t.win[i],
           file_patterns = list(
             dive = 'dive',
             depths = 'depths'

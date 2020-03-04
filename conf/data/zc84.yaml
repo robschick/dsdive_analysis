@@ -1,6 +1,7 @@
 data:
   name: zc84
   path: data/zc84
+  tstep: 300
   file_patterns:
     dive: dive
     depths: depths
@@ -10,4 +11,4 @@ data:
     sequential modeling.  However, the dataset does not contain all deep dives
     from zc84; the dataset only includes deep dives that meet certain quality
     standards.  The dives are also preprocessed so that the observations all use
-    the same exact depth bins.
+    the same exact depth bins.  Depth bins are reported once every 300 seconds.
