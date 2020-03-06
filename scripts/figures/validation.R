@@ -37,7 +37,7 @@ groups=list(validation="holdout_half",observation_model="uniform_systematic",sam
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
 
-cfg = read_yaml(file = 'output/zc84_bak/all_dives/holdout_half/exact_systematic/standard_priors/cfg.yaml')
+cfg = read_yaml(file = 'output/zc84_bak/all_dives/holdout_half/uniform_systematic/standard_priors/cfg.yaml')
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
@@ -260,7 +260,7 @@ ks.gof = function(df, var, verbose = TRUE) {
 # chisq gof test formatting
 #
 
-chisq.gof = function(df, var, verbose = TRUE, collapse = TRUE) {
+chisq.gof = function(df, var, verbose = TRUE, collapse) {
   # Parameters:
   #  collapse - TRUE to merge cells with expected counts less than 5.  The 
   #    merging will be done working from the tails toward the center of the 
@@ -281,10 +281,62 @@ chisq.gof = function(df, var, verbose = TRUE, collapse = TRUE) {
   
   colnames(df.chisq)[3] = 'observed'
   
+  # collapse low-probability states to ensure at least 5 expected observations
+  # per group
+  if(collapse) {
+    
+    # minimum probability required per category
+    p.min = 5 / sum(df.chisq$observed)
+    
+    df.chisq$groups = 0
+    n = nrow(df.chisq)
+    gp = 1
+    
+    # forward pass 
+    for(i in 1:nrow(df.chisq)) {
+      if(df.chisq$groups[i]==0) {
+        mass.exceedance = which(cumsum(df.chisq$prob[i:n]) >= p.min)
+        if(length(mass.exceedance)>0) {
+          gp.inds = i:(i:n)[min(mass.exceedance)]
+          df.chisq$groups[gp.inds] = gp
+          gp = gp + 1
+        }
+      }
+    }
+    
+    # backward pass 
+    for(i in nrow(df.chisq):1) {
+      if(df.chisq$groups[i]==0) {
+        mass.exceedance = which(cumsum(df.chisq$prob[i:1]) >= p.min)
+        if(length(mass.exceedance)>0) {
+          gp.inds = i:(i:1)[min(mass.exceedance)]
+          if(any(df.chisq$groups[gp.inds]>0)) {
+            gp.tmp =  max(df.chisq$groups[df.chisq$groups[gp.inds]>0])
+          } else {
+            gp.tmp = gp
+            gp = gp + 1
+          }
+          df.chisq$groups[gp.inds] = gp.tmp
+        }
+      }
+    }
+    
+    # merge groups
+    df.chisq = df.chisq %>% 
+      group_by(groups) %>% 
+      summarise(support = paste(c(round(min(support)), 
+                                  round(max(support))), collapse = '_'),
+                prob = sum(prob), 
+                observed = sum(observed)) %>% 
+      ungroup() %>% 
+      select(-groups)
+  }
+  
   # run chisq test
   res = chisq.test(x = df.chisq$observed, p = df.chisq$prob)
   
   if(verbose) {
+    # extract expected counts
     df.chisq$expected = round(res$expected)
     
     cat("==================================\n")
@@ -375,7 +427,11 @@ ggsave(pl, filename = file.path(o, 'max_observed_depth_cdf.png'),
        dpi = 'print')
 
 sink(file.path(o, paste('max_observed_depth_chisq.txt')))
-r = chisq.gof(df, 'max.depth.obs')
+r = chisq.gof(df, 'max.depth.obs', collapse = FALSE)
+sink()
+
+sink(file.path(o, paste('max_observed_depth_chisq_collapsed.txt')))
+r = chisq.gof(df, 'max.depth.obs', collapse = TRUE)
 sink()
 
 sink(file.path(o, paste('max_observed_depth_ks.txt')))
@@ -435,7 +491,11 @@ ggsave(pl, filename = file.path(o, 'observed_duration_cdf.png'),
        dpi = 'print')
 
 sink(file.path(o, paste('observed_duration_chisq.txt')))
-r = chisq.gof(df, 'duration.obs')
+r = chisq.gof(df, 'duration.obs', collapse = FALSE)
+sink()
+
+sink(file.path(o, paste('observed_duration_chisq_collapsed.txt')))
+r = chisq.gof(df, 'duration.obs', collapse = TRUE)
 sink()
 
 sink(file.path(o, paste('max_observed_duration_ks.txt')))
@@ -503,7 +563,16 @@ ggsave(pl, filename = file.path(o, 'depths_by_time_cdf.png'),
 sink(file.path(o, paste('depths_by_time_chisq.txt')))
 r = lapply(sort(unique(df$time))[-1], function(s) {
   res = chisq.gof(df %>% mutate(series = Distribution) %>% 
-                    filter(time==s), 'depth')
+                    filter(time==s), 'depth', collapse = FALSE)
+  cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
+  res
+})
+sink()
+
+sink(file.path(o, paste('depths_by_time_chisq_collapsed.txt')))
+r = lapply(sort(unique(df$time))[-1], function(s) {
+  res = chisq.gof(df %>% mutate(series = Distribution) %>% 
+                    filter(time==s), 'depth', collapse = TRUE)
   cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
   res
 })
@@ -590,7 +659,17 @@ sink(file.path(o, paste('stage_duration_chisq.txt')))
 r = lapply(levels(df$stage), function(s) {
   df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
     mutate(prob = prob/sum(prob)) %>% ungroup()
-  res = chisq.gof(df2, 'stage.duration')
+  res = chisq.gof(df2, 'stage.duration', collapse = FALSE)
+  cat(paste("\n(", s," results)\n\n\n", sep=''))
+  res
+})
+sink()
+
+sink(file.path(o, paste('stage_duration_chisq_collapsed.txt')))
+r = lapply(levels(df$stage), function(s) {
+  df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
+    mutate(prob = prob/sum(prob)) %>% ungroup()
+  res = chisq.gof(df2, 'stage.duration', collapse = TRUE)
   cat(paste("\n(", s," results)\n\n\n", sep=''))
   res
 })
