@@ -12,6 +12,7 @@ library(ggplot2)
 library(ggthemes)
 library(tidyr)
 library(forcats)
+library(KSgeneral)
 
 
 #
@@ -35,6 +36,8 @@ groups=list(validation="holdout_half",observation_model="uniform_systematic",sam
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
+
+cfg = read_yaml(file = 'output/zc84_bak/all_dives/holdout_half/exact_systematic/standard_priors/cfg.yaml')
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
@@ -200,10 +203,68 @@ postpred.depthseq = do.call(rbind, lapply(1:n.samples, function(ind) {
 
 
 #
+# discrete KS gof test formatting
+#
+
+ks.gof = function(df, var, verbose = TRUE) {
+  
+  # extract estimate of posterior predictive distribution
+  prob = df %>% filter(series=='Post. Predictive') %>% ungroup()
+  prob = prob[order(prob[var] %>% unlist()),]
+  
+  # extract validation samples
+  obs = df %>% filter(series=='Empirical Validation') %>% ungroup() 
+  
+  # compute support, and merge data; replace missing items with 0
+  df.ks = data.frame(support = sort(unique(c(prob[var] %>% unlist(), 
+                                                obs[var] %>% unlist())))) %>% 
+    left_join(prob %>% select(var, prob), by = c('support' = var)) %>% 
+    left_join(obs %>% select(var, prob), by = c('support' = var)) %>% 
+    mutate_all(~replace(., which(is.na(.)), 0))
+  
+  colnames(df.ks)[2:3] = c('prob.posterior', 'prob.observed')
+  
+  # expand validation samples to raw counts
+  samples = rep(obs[var] %>% unlist(), obs$n)
+  
+  # run ks test
+  res = disc_ks_test(x = samples, 
+                     y = stepfun(x = df.ks$support, 
+                                 y = c(0,cumsum(df.ks$prob.posterior))),
+                     exact = TRUE)
+  
+  if(verbose) {
+
+    cat("==================================\n")
+    cat("K-S goodness of fit test\n")
+    cat("==================================\n")
+    
+    cat("\n")
+    
+    print(c(res$statistic, p=res$p.value))
+    
+    cat("\n")
+    
+    print(df.ks)
+    
+    cat("\n")
+    
+    print(c(n=length(samples)))
+  }
+  
+  res
+}
+
+
+#
 # chisq gof test formatting
 #
 
-chisq.gof = function(df, var, verbose = TRUE) {
+chisq.gof = function(df, var, verbose = TRUE, collapse = TRUE) {
+  # Parameters:
+  #  collapse - TRUE to merge cells with expected counts less than 5.  The 
+  #    merging will be done working from the tails toward the center of the 
+  #    distribution's support.
   
   # extract estimate of posterior predictive distribution
   prob = df %>% filter(series=='Post. Predictive') %>% ungroup() 
@@ -317,6 +378,10 @@ sink(file.path(o, paste('max_observed_depth_chisq.txt')))
 r = chisq.gof(df, 'max.depth.obs')
 sink()
 
+sink(file.path(o, paste('max_observed_depth_ks.txt')))
+r = ks.gof(df, 'max.depth.obs')
+sink()
+
 save(df, r, file = file.path(o, paste('max_observed_depth.RData')))
 
 #
@@ -371,6 +436,10 @@ ggsave(pl, filename = file.path(o, 'observed_duration_cdf.png'),
 
 sink(file.path(o, paste('observed_duration_chisq.txt')))
 r = chisq.gof(df, 'duration.obs')
+sink()
+
+sink(file.path(o, paste('max_observed_duration_ks.txt')))
+r = ks.gof(df, 'duration.obs')
 sink()
 
 save(df, r, file = file.path(o, paste('observed_duration.RData')))
@@ -435,6 +504,15 @@ sink(file.path(o, paste('depths_by_time_chisq.txt')))
 r = lapply(sort(unique(df$time))[-1], function(s) {
   res = chisq.gof(df %>% mutate(series = Distribution) %>% 
                     filter(time==s), 'depth')
+  cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
+  res
+})
+sink()
+
+sink(file.path(o, paste('depths_by_time_ks.txt')))
+r = lapply(sort(unique(df$time))[-1], function(s) {
+  res = ks.gof(df %>% mutate(series = Distribution) %>% 
+                 filter(time==s), 'depth')
   cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
   res
 })
@@ -518,4 +596,15 @@ r = lapply(levels(df$stage), function(s) {
 })
 sink()
 
+sink(file.path(o, paste('stage_duration_ks.txt')))
+r = lapply(levels(df$stage), function(s) {
+  df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
+    mutate(prob = prob/sum(prob)) %>% ungroup()
+  res = ks.gof(df2, 'stage.duration')
+  cat(paste("\n(", s," results)\n\n\n", sep=''))
+  res
+})
+sink()
+
 save(df, r, file = file.path(o, paste('stage_duration.RData')))
+
