@@ -145,7 +145,7 @@ sim.gen = function(beta, lambda, T1.params, T2.params, N, t.win,
 # base simulation configuration
 #
 
-n.sim = 50
+n.sim = 100
 seed = 2019
 
 # load SATTAG depth template
@@ -173,7 +173,7 @@ T2.params = c(T2.mean^2/T2.sd^2, T2.mean/T2.sd^2)
 # test the simulation settings
 base.series = sim.gen(
   beta = beta, lambda = lambda, T1.params = T1.params, T2.params = T2.params,
-  N = n.sim, out.path = file.path('data', 'sim', 'base'), seed = seed, 
+  N = n.sim, out.path = file.path('data', 'sim', 'base', 'more'), seed = seed, 
   t.win = c(.5,1,5) * 60
 )
 
@@ -181,7 +181,7 @@ base.series = sim.gen(
 deeper.series = sim.gen(
   beta = c(.95, .1), lambda = c(1.8, .3, 1.2), 
   T1.params = T1.params, T2.params = T2.params,
-  N = n.sim, out.path = file.path('data', 'sim', 'deeper'), seed = seed, 
+  N = n.sim, out.path = file.path('data', 'sim', 'deeper', 'more'), seed = seed, 
   t.win = c(.5,1,5) * 60
 )
 
