@@ -11,15 +11,11 @@
 
 TGT=`(cd conf/data/ && ls sim*more*) | sed -n ${SLURM_ARRAY_TASK_ID}p | sed -e 's/\..*//'`
 
-echo $TGT
-
 CMDSTRING="--args groups=list(\
 data=\"${TGT}\",\
 observation_model=\"exact_systematic\",\
 priors=\"simulation_priors\",\
 sampler=\"prod\")"
-
-echo $CMDSTRING
 
 date
 START=`date +%s`
@@ -30,4 +26,3 @@ date
 
 ELAPSED=$(( $END - $START ))
 echo "Elapsed time (hrs): $(echo "scale=10; $ELAPSED/3600" | bc)"
-
