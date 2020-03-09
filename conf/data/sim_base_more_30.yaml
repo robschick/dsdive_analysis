@@ -1,0 +1,9 @@
+data:
+  name: sim_base_more_30
+  path: data/sim/base/more/observations_30
+  tstep: 30.0
+  file_patterns:
+    dive: dive
+    depths: depths
+  description: Observations of simulated dives.  Dives are observed every 30 seconds.  Complete
+    dives are stored in ../truth.
