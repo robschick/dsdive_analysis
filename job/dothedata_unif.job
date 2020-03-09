@@ -8,7 +8,7 @@
 #SBATCH --ntasks 1
 #SBATCH --time 48:00:00
 
-CMDSTRING="--args groups=list(\
+CFGSTRING="--args groups=list(\
 data=\"zc84\",\
 validation=\"no_validation\",\
 observation_model=\"uniform_systematic\",\
@@ -17,7 +17,7 @@ sampler=\"prod\")"
 date
 START=`date +%s`
 singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH \
-  "${CMDSTRING}" "scripts/fit.R" fit_${SLURM_JOB_NAME}.Rout
+  "${CFGSTRING}" "scripts/fit.R" fit_${SLURM_JOB_NAME}.Rout
 END=`date +%s`
 date
 
