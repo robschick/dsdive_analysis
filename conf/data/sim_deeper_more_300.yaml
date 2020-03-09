@@ -1,6 +1,6 @@
 data:
   name: sim_deeper_more_300
-  path: data/sim/deeper/more/observations_300
+  path: data/sim/deeper_more/observations_300
   tstep: 300.0
   file_patterns:
     dive: dive

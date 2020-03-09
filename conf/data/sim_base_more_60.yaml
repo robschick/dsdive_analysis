@@ -1,6 +1,6 @@
 data:
   name: sim_base_more_60
-  path: data/sim/base/more/observations_60
+  path: data/sim/base_more/observations_60
   tstep: 60.0
   file_patterns:
     dive: dive
