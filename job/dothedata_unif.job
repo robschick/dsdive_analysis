@@ -17,7 +17,7 @@ sampler=\"prod\")"
 date
 START=`date +%s`
 singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH \
-  "${CMDSTRING}" "scripts/fit.R" fit_${SLURM_ARRAY_TASK_ID}.Rout
+  "${CMDSTRING}" "scripts/fit.R" fit_${SLURM_JOB_NAME}.Rout
 END=`date +%s`
 date
 
