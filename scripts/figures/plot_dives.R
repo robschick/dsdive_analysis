@@ -34,6 +34,8 @@ rm(args,i)
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
 
+cfg = read_yaml(file = 'output/sim_deeper_300/all_dives/no_validation/exact_systematic/simulation_priors/cfg.yaml')
+
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
                     cfg$validation$name, cfg$observation_model$name, 
@@ -57,7 +59,8 @@ dives.obs = dives.load(path = cfg$data$path,
 #
 
 if(is.null(cfg$sub_paths$dives)) {
-  cfg$sub_paths$dives = 'dives'
+  defaults = compose_cfg(file = 'conf/config.yaml')
+  cfg$sub_paths$dives = defaults$sub_paths$dives
 }
 
 o = file.path(out.dir, cfg$sub_paths$figures, cfg$sub_paths$dives)
