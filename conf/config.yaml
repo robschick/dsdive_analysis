@@ -17,6 +17,7 @@ sub_paths: # created under the output directory for each model run
   comparisons: comparisons
   dives: dives
   posteriors: posteriors
+  imputations: imputations
 
 base_names: # files containing analysis artifacts/output
   fit: sampler_trace.RData  # MCMC chain from gibbs sampler over model params.
