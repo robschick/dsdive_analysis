@@ -92,8 +92,10 @@ clusterEvalQ(cl, load(file.path(out.dir, cfg$base_names$fit)))
 # export additional data to nodes
 clusterExport(cl = cl, c('dives.obs', 'depth.bins', 'tstep', 'fit.inds'))
 
-# partition posterior samples to distribute across nodes
-dive.nodes = balance_inds(n.inds = nrow(state$theta), n.partitions = length(cl))
+# partition posterior samples to distribute across nodes; use more partitions 
+# than clusters as a way to checkpoint output and control memory demands
+dive.nodes = balance_inds(n.inds = nrow(state$theta), 
+                          n.partitions = 4*length(cl))
 
 if(is.null(cfg$sub_paths$imputations)) {
   defaults = compose_cfg(file = 'conf/config.yaml')

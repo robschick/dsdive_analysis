@@ -14,7 +14,7 @@ imputed.size = 1700
 class(imputed.size) = 'bytes'
 
 # average time to impute a single dive (seconds)
-imputed.time = 6.5/50
+imputed.time = 146.217/(88*14)
 
 
 #
@@ -22,7 +22,7 @@ imputed.time = 6.5/50
 #
 
 # number of dives to impute
-n.dives = 132
+n.dives = 88
 
 # number of posterior samples to work over
 mcit = 10e3
@@ -59,3 +59,4 @@ min.cores.time = ceiling(total.time / desired.time)
 # minimum number of cores required to satisfy all constraints
 min.cores = max(min.cores.mem, min.cores.time)
 
+c(min.cores.mem, min.cores.time, min.cores)
