@@ -23,11 +23,11 @@ if(length(args)>0) {
 }
 rm(args,i)
 
-groups=list(validation="holdout_half",observation_model="exact_systematic",sampler="prod")
-
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
+
+cfg = read_yaml(file = 'output/zc84_bak/all_dives/holdout_half/exact_systematic/standard_priors/cfg.yaml')
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
