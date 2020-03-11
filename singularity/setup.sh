@@ -46,6 +46,6 @@ singularity exec rmovement.sif install2.r -l libs -r NULL ./dsdive
 
 echo Updating RMPI snow profile...
 
-sed -i 's/\(library([A-Za-z0-9]*\)\()\)/\1, lib.loc = c(".", .libPaths())\2/g' libs/snow/RMPISNOWprofile
+sed -i 's/\(library([A-Za-z0-9]*\)\()\)/\1, lib.loc = c("singularity\/libs", ".", .libPaths())\2/g' libs/snow/RMPISNOWprofile
 
 echo Finished setting up singularity image
