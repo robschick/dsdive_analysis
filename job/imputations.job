@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name impute_data
+#SBATCH --job-name unif_fullimpute
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL
@@ -10,11 +10,19 @@
 
 module swap OpenMPI/4.0.1
 
-R_PROFILE=singularityRMPISNOWprofile; export R_PROFILE
+R_PROFILE=singularity/libs/snow/RMPISNOWprofile; export R_PROFILE
+
+CFGSTRING="--args groups=list(\
+data=\"zc84\",\
+validation=\"no_validation\",\
+observation_model=\"uniform_systematic\",\
+sampler=\"prod\")"
 
 date
 START=`date +%s`
-mpirun --mca mpi_cuda_support 0 singularity exec rmovement.sif R --no-save --no-restore CMD BATCH composition.R
+mpirun --mca mpi_cuda_support 0 singularity exec rmovement.sif R \
+  --no-save --no-restore CMD BATCH "${CFGSTRING}" "scripts/imputation.R" \
+  impute_${SLURM_JOB_NAME}.Rout
 END=`date +%s`
 date
 
