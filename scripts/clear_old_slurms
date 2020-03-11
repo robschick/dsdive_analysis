@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# remove slurm output files for jobs that are not currently running
+
+function prepend() { while read line; do echo "${1}${line}"; done; }
+function postpend() { while read line; do echo "${line}${1}"; done; }
+
+# build names of slurm output files for jobs and arrays that are running
+EXCLUDES=`squeue -u $USER -o %i | tail -n +2 | prepend "-not -name slurm-" | \
+ postpend ".out" | sed -e :a -e '$!N; s/\n/ /; ta'`
+
+find . -maxdepth 1 -name 'slurm-*.out' ${EXCLUDES} -delete
