@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name sim_runs
+#SBATCH --job-name sim_tyack
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL
@@ -9,18 +9,20 @@
 #SBATCH --time 48:00:00
 #SBATCH --array 1-6
 
-TGT=`(cd conf/data/ && ls sim*alldeep*more*) | sed -n ${SLURM_ARRAY_TASK_ID}p | sed -e 's/\..*//'`
+TGT=`(cd conf/data/ && ls sim*tyack*) | sed -n ${SLURM_ARRAY_TASK_ID}p | sed -e 's/\..*//'`
 
 CFGSTRING="--args groups=list(\
 data=\"${TGT}\",\
 observation_model=\"exact_systematic\",\
-priors=\"simulation_priors\",\
+priors=\"tyack_simulation_priors\",\
+subset=\"all_dives\",\
+validation=\"no_validation\",\
 sampler=\"prod\")"
 
 date
 START=`date +%s`
 singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH \
-  "${CFGSTRING}" "scripts/fit.R" fit_simulation_${SLURM_ARRAY_TASK_ID}.Rout
+  "${CFGSTRING}" "scripts/fit.R" fit_simulation_tyack_${SLURM_ARRAY_TASK_ID}.Rout
 END=`date +%s`
 date
 

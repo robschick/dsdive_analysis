@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name unif_fullfit
+#SBATCH --job-name unif_tyak
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL
@@ -10,9 +10,11 @@
 
 CFGSTRING="--args groups=list(\
 data=\"zc84\",\
-validation=\"no_validation\",\
 observation_model=\"uniform_systematic\",\
-sampler=\"prod\")"
+priors=\"tyack_priors\",\
+sampler=\"prod\",\
+subset=\"all_dives\",\
+validation=\"no_validation\")"
 
 date
 START=`date +%s`
