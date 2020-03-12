@@ -196,6 +196,36 @@ T2.params = c(T2.mean^2/T2.sd^2, T2.mean/T2.sd^2)
 # curve(dgamma(x = x, shape = T2.params[1], rate = T2.params[2]),
 #       from = 0, to = 20)
 
+lambda.tyack = c(1.5, .3, .7)
+
+# mean and sd. for time in stage
+T1.mean = 17.3
+T1.sd = 3
+T2.mean = 32.8
+T2.sd = 7.6
+
+# convert mean and sd. for time in stage to gamma shape/rate parameters
+T1.params.tyack = c(T1.mean^2/T1.sd^2, T1.mean/T1.sd^2)
+T2.params.tyack = c(T2.mean^2/T2.sd^2, T2.mean/T2.sd^2)
+
+
+# simulation based on Tyack paper
+tyack.series = sim.gen(
+  beta = beta, lambda = lambda.tyack, T1.params = T1.params.tyack, 
+  T2.params = T2.params.tyack,
+  N = n.sim, out.path = file.path('data', 'sim', 'tyack_alldeep_more'), 
+  seed = seed, t.win = c(.5,1,5) * 60, require.deep = TRUE
+)
+
+# non-deep simulation based on Tyack paper
+tyack.series.free = sim.gen(
+  beta = beta, lambda = lambda.tyack, T1.params = T1.params.tyack, 
+  T2.params = T2.params.tyack,
+  N = n.sim, out.path = file.path('data', 'sim', 'tyack_more'), 
+  seed = seed, t.win = c(.5,1,5) * 60, require.deep = FALSE
+)
+
+
 # test the simulation settings
 base.series = sim.gen(
   beta = beta, lambda = lambda, T1.params = T1.params, T2.params = T2.params,
