@@ -189,6 +189,8 @@ T2.prior.params = T2.prior$estimate / c(1, 60)
 # gibbs sample
 #
 
+save(T1.prior.params, T2.prior.params, 
+     file = file.path(out.dir, cfg$base_names$stage_priors))
 save(fit.inds, file = file.path(out.dir, cfg$base_names$fit_inds))
 write_yaml(cfg, file = file.path(out.dir, 'cfg.yaml'))
 

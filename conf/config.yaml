@@ -22,6 +22,7 @@ sub_paths: # created under the output directory for each model run
 base_names: # files containing analysis artifacts/output
   fit: sampler_trace.RData  # MCMC chain from gibbs sampler over model params.
   fit_inds: fit_inds.RData  # indices that partition data into test/train sets
+  stage_priors: stage_priors.RData # parameters for stage transition time priors
   posterior_predictions:
     file: samples_X.RData   # posterior predictive distribution draws
     index_pattern: X        # character to replace with sample indices
