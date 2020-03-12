@@ -1,5 +1,5 @@
 sampler:
-  name: simulation_priors
+  name: tyack_priors
   descent_speed: # parameterization for gamma prior on lambda1 (m/s)
     mu: 1.5
     sd: .1
