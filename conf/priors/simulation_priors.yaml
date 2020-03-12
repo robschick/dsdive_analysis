@@ -1,4 +1,19 @@
 sampler:
   name: simulation_priors
+  descent_speed: # parameterization for gamma prior on lambda1 (m/s)
+    mu: 1.25
+    sd: .5
+  forage_speed: # parameterization for gamma prior on lambda2 (m/s)
+    mu: .3
+    sd: .1
+  ascent_speed: # parameterization for gamma prior on lambda3 (m/s)
+    mu: .5
+    sd: .3
+  descent_preference: # parameterization for beta prior on pi1
+    mu: .9
+    shape2: 2
+  ascent_preference:
+    mu: .1
+    shape1: 2
   description: Pull priors for stage transition times from the subdirectories
     in which the simulated data are stored.

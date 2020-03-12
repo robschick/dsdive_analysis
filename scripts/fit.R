@@ -108,13 +108,20 @@ gamma.param = function(mu, sd) {
   }
 }
 
-b = 2
-pi1.prior = c(.9/(1-.9) * b, b)
-pi2.prior = rev(pi1.prior)
+mu = cfg$priors$descent_preference$mu
+b = cfg$priors$descent_preference$shape2
+pi1.prior = c(mu/(1-mu) * b, b)
 
-lambda1.prior = gamma.param(mu = 1.25, sd = .5)
-lambda2.prior = gamma.param(mu = .3, sd = .1)
-lambda3.prior = gamma.param(mu = .5, sd = .3)
+mu = 1-cfg$priors$ascent_preference$mu
+b = cfg$priors$ascent_preference$shape1
+pi2.prior = rev(c(mu/(1-mu) * b, b))
+
+lambda1.prior = gamma.param(mu = cfg$priors$descent_speed$mu, 
+                            sd = cfg$priors$descent_speed$sd)
+lambda2.prior = gamma.param(mu = cfg$priors$forage_speed$mu, 
+                            sd = cfg$priors$forage_speed$sd)
+lambda3.prior = gamma.param(mu = cfg$priors$ascent_speed$mu, 
+                            sd = cfg$priors$ascent_speed$sd)
 
 # use 85% max depth rule to determine time in stages
 times.stages = do.call(rbind, lapply(dives.obs, function(d) {
@@ -149,10 +156,10 @@ times.stages = do.call(rbind, lapply(dives.obs, function(d) {
              bottom.time.min = diff(t.stages)/60)
 }))
 
-if(cfg$priors$name == 'standard_priors') {
+if(cfg$priors$name != 'simulation_priors') {
   T1.prior = fitdistr(x = times.stages$sub.time.min, densfun = 'gamma')
   T2.prior = fitdistr(x = times.stages$bottom.time.min, densfun = 'gamma')
-} else if(cfg$priors$name == 'simulation_priors') {
+} else {
   load(file.path(cfg$data$path, '..', 'params', 'params.RData'))
   T1.prior = list(estimate = params$T1.params)
   T2.prior = list(estimate = params$T2.params)
@@ -162,7 +169,7 @@ if(cfg$priors$name == 'standard_priors') {
 # # plot priors
 # curve(dbeta(x = x, shape1 = pi1.prior[1], shape2 = pi1.prior[2]), 
 #       xlab = expression(pi[1]), ylab = expression(f(pi[1])))
-# curve(dbeta(x = x, shape1 = pi2.prior[1], shape2 = pi2.prior[2]), 
+# curve(dbeta(x = x, shape1 = pi2.prior[1], shape2 = pi2.prior[2]),
 #       xlab = expression(pi[2]), ylab = expression(f(pi[2])))
 # curve(dgamma(x = x, shape = lambda1.prior[1], rate = lambda1.prior[2]), 
 #       xlab = expression(lambda[1]), ylab = expression(f(lambda[1])), 
