@@ -15,13 +15,15 @@ library(yaml)
 #
 
 sim.gen = function(beta, lambda, T1.params, T2.params, N, t.win, 
-                   out.path = NULL, seed = NULL) {
+                   out.path = NULL, seed = NULL, require.deep = FALSE) {
   # Parameters:
   #  beta, lambda, T1.params, T2.params - model parameters
   #  N - number of dives to simulate
   #  t.win - vector with number of seconds between observing the dive
   #  out.path - directory in which to save simulated trajectories
   #  seed - seed from which to start simulation
+  #  require.deep - TRUE to rejection sample simulations until observed depth
+  #    is at least 1,000m
   
   if(!is.null(seed)) {
     set.seed(seed)
@@ -30,25 +32,49 @@ sim.gen = function(beta, lambda, T1.params, T2.params, N, t.win,
   # simulate family of dives 
   x = replicate(N, {
     
-    # sample stage durations
-    T1 = 60 * rgamma(n = 1, shape = T1.params[1], rate = T1.params[2])
-    T2 = 60 * rgamma(n = 1, shape = T2.params[1], rate = T2.params[2])
+    max.attempts = 1e5
+    sampled.deep = FALSE
+    
+    attempts = 0
+    while(!sampled.deep) {
       
-    # simulate dive
-    d = dsdive.fwdsample.dive(depth.bins = depth.bins, beta = beta, 
-                              lambda = lambda, t0 = 0, steps.max = 1e3, T1 = T1, 
-                              T2 = T2)
+      # sample stage durations
+      T1 = 60 * rgamma(n = 1, shape = T1.params[1], rate = T1.params[2])
+      T2 = 60 * rgamma(n = 1, shape = T2.params[1], rate = T2.params[2])
+      
+      # simulate dive
+      d = dsdive.fwdsample.dive(depth.bins = depth.bins, beta = beta, 
+                                lambda = lambda, t0 = 0, steps.max = 1e3, 
+                                T1 = T1, T2 = T2)
+      
+      # observe dive at different time intervals
+      d.obs = lapply(t.win, function(t.win) {
+        # determine observation times
+        t.obs = seq(from = 0, to = max(d$times) + t.win, by = t.win)
+        # observe dive
+        dsdive.observe(depths = d$depths, times = d$times, 
+                       stages = d$stages, t.obs = t.obs)
+      })
+      
+      # check to see if sampled dive is deep
+      if(require.deep) {
+        attempts = attempts + 1
+        sampled.deep = all(sapply(d.obs, function(dobs) { 
+          max(depth.bins[dobs$depths,1]) >= 1e3
+        }))
+        if(attempts >= max.attempts) {
+          break
+        }
+      } else {
+        sampled.deep = TRUE
+      }
+      
+    }
     
-    # observe dive at different time intervals
-    d.obs = lapply(t.win, function(t.win) {
-      # determine observation times
-      t.obs = seq(from = 0, to = max(d$times) + t.win, by = t.win)
-      # observe dive
-      dsdive.observe(depths = d$depths, times = d$times, 
-                     stages = d$stages, t.obs = t.obs)
-    })
-    
-    
+    if(!sampled.deep) {
+      stop('Deep dive not successfully sampled')
+    }
+      
     # extract empirical stages times
     t.stages = d$times[c(FALSE, diff(d$stages)==1)]
     
@@ -173,16 +199,16 @@ T2.params = c(T2.mean^2/T2.sd^2, T2.mean/T2.sd^2)
 # test the simulation settings
 base.series = sim.gen(
   beta = beta, lambda = lambda, T1.params = T1.params, T2.params = T2.params,
-  N = n.sim, out.path = file.path('data', 'sim', 'base_more'), seed = seed, 
-  t.win = c(.5,1,5) * 60
+  N = n.sim, out.path = file.path('data', 'sim', 'base_alldeep_more'), 
+  seed = seed, t.win = c(.5,1,5) * 60, require.deep = TRUE
 )
 
 # test the simulation settings with faster diving rates
 deeper.series = sim.gen(
   beta = c(.95, .1), lambda = c(1.8, .3, 1.2), 
   T1.params = T1.params, T2.params = T2.params,
-  N = n.sim, out.path = file.path('data', 'sim', 'deeper_more'), seed = seed, 
-  t.win = c(.5,1,5) * 60
+  N = n.sim, out.path = file.path('data', 'sim', 'deeper_alldeep_more'), 
+  seed = seed, t.win = c(.5,1,5) * 60, require.deep = TRUE
 )
 
 

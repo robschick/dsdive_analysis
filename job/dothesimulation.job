@@ -9,7 +9,7 @@
 #SBATCH --time 48:00:00
 #SBATCH --array 1-6
 
-TGT=`(cd conf/data/ && ls sim*more*) | sed -n ${SLURM_ARRAY_TASK_ID}p | sed -e 's/\..*//'`
+TGT=`(cd conf/data/ && ls sim*alldeep*more*) | sed -n ${SLURM_ARRAY_TASK_ID}p | sed -e 's/\..*//'`
 
 CFGSTRING="--args groups=list(\
 data=\"${TGT}\",\
