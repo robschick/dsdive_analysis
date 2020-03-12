@@ -32,7 +32,7 @@ rm(args,i)
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
 
-cfg = compose_cfg(file = 'output/sim_deeper_300/all_dives/no_validation/exact_systematic/simulation_priors/cfg.yaml')
+cfg = compose_cfg(file = 'output/zc84/all_dives/no_validation/uniform_systematic/standard_priors/cfg.yaml')
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
@@ -91,3 +91,44 @@ HPDinterval(m)
 cat('\nEffective sample size\n\n')
 effectiveSize(m)
 sink()
+
+
+#
+# compare priors and posteriors for stage transition times
+#
+
+# load parameters for stage transition priors
+load(file.path(out.dir, cfg$base_names$stage_priors))
+
+# MC approximation of stage 2->3 transition time (vs. stage 2 duration)
+mc.it = 1e5
+T2.prior.samples = rgamma(n = mc.it, shape = T1.prior.params[1], 
+                          rate = T1.prior.params[2]) + 
+  rgamma(n = mc.it, shape = T2.prior.params[1], rate = T2.prior.params[2])
+
+# extract posterior samples of stage 1 transition times
+T1.mcmc = sapply(state$trace.t.stages, function(t.stages.list) {
+  sapply(t.stages.list, function(t.stages) { t.stages[1] })
+})
+
+# extract posterior samples of stage 2 transition times
+T2.mcmc = sapply(state$trace.t.stages, function(t.stages.list) {
+  sapply(t.stages.list, function(t.stages) { t.stages[2] })
+})
+
+# compare prior and posterior for stage 1 transition times
+png(file.path(o, 'T1_learning.png'))
+plot(density(as.numeric(T1.mcmc[,-(1:cfg$sampler$burn)])/60),
+     xlab = expression(T^(1)~'(min)'), 
+     main = 'Posterior (black) vs. Prior (red)')
+curve(60*dgamma(x*60, shape = T1.prior.params[1], rate = T1.prior.params[2]), 
+      from = min(T1.mcmc)/60-1, to = max(T1.mcmc)/60+1, col = 2, add = TRUE)
+dev.off()
+
+# compare prior and posterior for stage 2 transition times
+png(file.path(o, 'T2_learning.png'))
+plot(density(as.numeric(T2.mcmc[,-(1:cfg$sampler$burn)])/60),
+     xlab = expression(T^(2)~'(min)'), 
+     main = 'Posterior (black) vs. Prior (red)')
+lines(density(T2.prior.samples/60), col = 2)
+dev.off()
