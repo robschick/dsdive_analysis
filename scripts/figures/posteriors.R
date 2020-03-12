@@ -116,6 +116,18 @@ T2.mcmc = sapply(state$trace.t.stages, function(t.stages.list) {
   sapply(t.stages.list, function(t.stages) { t.stages[2] })
 })
 
+# extract posterior samples of stage 1 durations
+stage1.dur.mcmc = sapply(state$trace.t.stages[-(1:cfg$sampler$burn)], 
+                         function(t.stages.list) {
+  sapply(t.stages.list, function(t.stages) { t.stages[1] })
+})
+
+# extract posterior samples of stage 2 durations
+stage2.dur.mcmc = sapply(state$trace.t.stages[-(1:cfg$sampler$burn)], 
+                         function(t.stages.list) {
+  sapply(t.stages.list, function(t.stages) { diff(t.stages) })
+})
+
 # compare prior and posterior for stage 1 transition times
 png(file.path(o, 'T1_learning.png'))
 plot(density(as.numeric(T1.mcmc[,-(1:cfg$sampler$burn)])/60),
@@ -131,4 +143,16 @@ plot(density(as.numeric(T2.mcmc[,-(1:cfg$sampler$burn)])/60),
      xlab = expression(T^(2)~'(min)'), 
      main = 'Posterior (black) vs. Prior (red)')
 lines(density(T2.prior.samples/60), col = 2)
+dev.off()
+
+# plot posterior for time in stage 1
+png(file.path(o, 'stage1_dur.png'), width = 480*2)
+plot(density(stage1.dur.mcmc/60), xlab = 'Descent duration (min)', 
+     main = 'Posterior density')
+dev.off()
+
+# plot posterior for time in stage 2
+png(file.path(o, 'stage2_dur.png'), width = 480*2)
+plot(density(stage2.dur.mcmc/60), xlab = 'Foraging duration (min)', 
+     main = 'Posterior density')
 dev.off()
