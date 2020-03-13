@@ -2,5 +2,5 @@
 
 cd -- "$(dirname "$0")"
 
-rsync -r jmh182@dcc-slogin.oit.duke.edu:/hpc/group/gelfandlab/jmh_scratch/analysis/output ../
 rsync -r jmh182@dcc-slogin.oit.duke.edu:/hpc/group/gelfandlab/jmh_scratch/analysis/*.Rout ../
+rsync -r jmh182@dcc-slogin.oit.duke.edu:/hpc/group/gelfandlab/jmh_scratch/analysis/output ../
