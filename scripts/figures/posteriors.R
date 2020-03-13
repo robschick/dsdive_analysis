@@ -28,11 +28,18 @@ if(length(args)>0) {
 }
 rm(args,i)
 
+groups = list(
+  data = 'zc84',
+  observation_model = 'uniform_systematic',
+  priors = 'tyack_priors',
+  sampler = 'prod',
+  subset = 'all_dives',
+  validation= 'holdout_half'
+)
+
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
-
-cfg = compose_cfg(file = 'output/zc84/all_dives/no_validation/uniform_systematic/standard_priors/cfg.yaml')
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
