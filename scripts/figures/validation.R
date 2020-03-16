@@ -561,6 +561,24 @@ pl = ggplot(df, aes(x = (depth), y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
                      # labels = paste(unique(time)/60, 'min', sep = ' '))) + 
   theme_few()
 
+pl.pub = ggplot(df %>% filter(time/60 >= 5, time/60 <= 60), 
+                aes(x = (depth), y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
+                    fill = Distribution, col = Distribution, 
+                    group = Distribution)) + 
+  geom_ribbon(alpha = .1, col = NA) + 
+  geom_point(size = 1) + 
+  geom_line(lty = 1, alpha = .2, lwd = .5) + 
+  scale_color_brewer(type = 'qual', palette = 'Dark2') + 
+  scale_fill_brewer(type = 'qual', palette = 'Dark2') +
+  xlab('Depth (m)') + 
+  ylab(expression(P('\u2113'(t) <= x))) + 
+  facet_wrap(~factor(paste('t =', time/60, 'min.', sep = ' '))) +  
+  # labels = paste(unique(time)/60, 'min', sep = ' '))) + 
+  theme_few()
+
+ggsave(pl.pub, filename = file.path(o, 'depths_by_time_cdf_pub.png'), 
+       dpi = 'print', width = 8, height = 6)
+
 ggsave(pl, filename = file.path(o, 'depths_by_time_cdf.png'), 
        dpi = 'print', width = 14, height = 14)
 
