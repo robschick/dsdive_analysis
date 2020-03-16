@@ -15,7 +15,8 @@ library(yaml)
 #
 
 sim.gen = function(beta, lambda, T1.params, T2.params, N, t.win, 
-                   out.path = NULL, seed = NULL, require.deep = FALSE) {
+                   out.path = NULL, seed = NULL, require.deep = FALSE,
+                   known.end = FALSE) {
   # Parameters:
   #  beta, lambda, T1.params, T2.params - model parameters
   #  N - number of dives to simulate
@@ -24,6 +25,8 @@ sim.gen = function(beta, lambda, T1.params, T2.params, N, t.win,
   #  seed - seed from which to start simulation
   #  require.deep - TRUE to rejection sample simulations until observed depth
   #    is at least 1,000m
+  #  known.end - TRUE to set the time of the final observation (e.g., at the 
+  #    surface) equal to the true end time of the dive
   
   if(!is.null(seed)) {
     set.seed(seed)
@@ -50,7 +53,12 @@ sim.gen = function(beta, lambda, T1.params, T2.params, N, t.win,
       # observe dive at different time intervals
       d.obs = lapply(t.win, function(t.win) {
         # determine observation times
-        t.obs = seq(from = 0, to = max(d$times) + t.win, by = t.win)
+        if(known.end) {
+          d.end = max(d$times)
+          t.obs = unique(c(seq(from = 0, to = d.end, by = t.win), d.end))
+        } else {
+          t.obs = seq(from = 0, to = max(d$times) + t.win, by = t.win)
+        }
         # observe dive
         dsdive.observe(depths = d$depths, times = d$times, 
                        stages = d$stages, t.obs = t.obs)
@@ -221,8 +229,8 @@ tyack.series = sim.gen(
 tyack.series.free = sim.gen(
   beta = beta, lambda = lambda.tyack, T1.params = T1.params.tyack, 
   T2.params = T2.params.tyack,
-  N = n.sim, out.path = file.path('data', 'sim', 'tyack_more'), 
-  seed = seed, t.win = c(.5,1,5) * 60, require.deep = FALSE
+  N = n.sim, out.path = file.path('data', 'sim', 'tyack_more_known_end'), 
+  seed = seed, t.win = c(.5,1,5) * 60, require.deep = FALSE, known.end = TRUE
 )
 
 
