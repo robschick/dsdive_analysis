@@ -24,7 +24,7 @@ source(file.path('scripts', 'utils', 'LoadToEnvironment.R'))
 # define simulation configurations to post-process
 #
 
-sim.series = 'deeper'
+sim.series = 'tyack_more'
 data.groups = gsub(pattern = '\\.yaml', replacement = '', 
                    x = dir(path = file.path('conf', 'data'), 
                            pattern = sim.series))
@@ -86,6 +86,7 @@ trace.theta = lapply(1:length(cfg.list), function(i) {
   r = LoadToEnvironment(file.path(out.dir, cfg$base_names$fit))
   # add timestep and burnin period
   r$tstep = cfg$data$tstep
+  cfg$sampler$burn = 100
   r$burn = cfg$sampler$burn
   # return
   r
@@ -268,3 +269,42 @@ sapply(trace.theta, function(trace) {
   effectiveSize(mcmc(trace$state$theta))
 })
 
+
+#
+# combined plot of all parameter recovery
+#
+
+# build plot
+pl = do.call(rbind, trace.summaries) %>%
+  # munge parameter labels
+  mutate(param = recode_factor(param, pi1='pi^(1)', pi2='pi^(3)', 
+                                 lambda1='lambda^(1)', lambda2='lambda^(2)',
+                                 lambda3='lambda^(3)')) %>%
+  # base plot
+  ggplot(aes(x = factor(tstep), y = mean, ymin = lower, ymax = upper)) + 
+  # parameter recovery
+  geom_pointrange() + 
+  # truth reference lines
+  geom_hline(mapping = aes(yintercept = truth), lty = 3) + 
+  # formatting
+  facet_grid(param~., scales = 'free_y', 
+             labeller = label_parsed, switch = 'both') + 
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 3.5)) +
+  # labels
+  xlab('Time between observations (sec.)') + 
+  ylab('Posterior estimate') + 
+  theme_few() + 
+  theme(strip.text.y = element_text(angle = 180, face = 'bold', size = 12), 
+        strip.placement = 'outside')
+
+pl
+
+# save plot
+sapply(1:length(cfg.list), function(i) {
+  cfg = cfg.list[[i]]
+  sc = 1.75
+  ggsave(pl,
+         filename = file.path(out.dir.list[[i]], cfg$sub_paths$figures, 
+                              cfg$sub_paths$comparisons, 'param_recovery.png'), 
+         dpi = 'print', width = 3*sc, height = 4*sc)
+})
