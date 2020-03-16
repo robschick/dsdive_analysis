@@ -11,6 +11,7 @@ library(dplyr)
 library(ggplot2)
 library(ggthemes)
 library(coda)
+library(xtable)
 
 
 #
@@ -34,7 +35,7 @@ groups = list(
   priors = 'tyack_priors',
   sampler = 'prod',
   subset = 'all_dives',
-  validation= 'holdout_half'
+  validation= 'no_validation'
 )
 
 # build configuration
@@ -98,6 +99,26 @@ HPDinterval(m)
 cat('\nEffective sample size\n\n')
 effectiveSize(m)
 sink()
+
+# publication-formatted summaries
+sink(file.path(o, 'diving_parameters_latex.txt'))
+df= data.frame(Mean = round(colMeans(m), 2),
+              `Sd.` = round(apply(m,2,sd), 2),
+              `HPD Interval` = apply(round(HPDinterval(m),2), 1, function(r) {
+                paste('(', r[1], ', ', r[2], ')', sep ='')
+              }))
+rownames(df) = c('$\\pi^{(1)}$', '$\\pi^{(3)}$', '$\\lambda^{(1)}$', 
+                 '$\\lambda^{(2)}$', '$\\lambda^{(3)}$')
+print(xtable(df, caption = paste(
+  'Posterior means, standard deviations, and 95\\% Highest posterior density', 
+  '(HPD) intervals for model parameters $\\v\\Theta$ when fit to satellite tag',
+  'data.', sep = ' '), 
+  label = 'table:post_parameters'), 
+  booktabs = TRUE, sanitize.text.function = function(x) x, timestamp = NULL, 
+  comment = FALSE
+)
+sink()
+
 
 
 #
@@ -163,3 +184,8 @@ png(file.path(o, 'stage2_dur.png'), width = 480*2)
 plot(density(stage2.dur.mcmc/60), xlab = 'Foraging duration (min)', 
      main = 'Posterior density')
 dev.off()
+
+# posterior correlations for model parameters
+sink(file.path(o, 'parameter_correlations.txt'))
+round(cor(state$theta),2)
+sink()
