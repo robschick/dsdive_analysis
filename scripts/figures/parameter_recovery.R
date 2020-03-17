@@ -24,7 +24,7 @@ source(file.path('scripts', 'utils', 'LoadToEnvironment.R'))
 # define simulation configurations to post-process
 #
 
-sim.series = 'tyack_more'
+sim.series = 'tyack_more_known_end'
 data.groups = gsub(pattern = '\\.yaml', replacement = '', 
                    x = dir(path = file.path('conf', 'data'), 
                            pattern = sim.series))
@@ -33,7 +33,7 @@ cfg.list = sweep_cfg(file = file.path('conf', 'config.yaml'),
                      groups = list(
                        data = data.groups,
                        observation_model = 'exact_systematic',
-                       priors = 'simulation_priors',
+                       priors = 'tyack_simulation_priors',
                        sampler = 'prod'))
 
 rm(sim.series, data.groups)
@@ -86,7 +86,7 @@ trace.theta = lapply(1:length(cfg.list), function(i) {
   r = LoadToEnvironment(file.path(out.dir, cfg$base_names$fit))
   # add timestep and burnin period
   r$tstep = cfg$data$tstep
-  cfg$sampler$burn = 100
+  cfg$sampler$burn = 250
   r$burn = cfg$sampler$burn
   # return
   r
