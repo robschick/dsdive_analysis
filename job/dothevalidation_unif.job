@@ -9,7 +9,7 @@
 #SBATCH --time 48:00:00
 
 CFGSTRING="--args groups=list(\
-data=\"zc84\",\
+data=\"zc84_800\",\
 observation_model=\"uniform_systematic\",\
 priors=\"tyack_priors\",\
 sampler=\"prod\",\
