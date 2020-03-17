@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # transfer files that were changed since last scrape.
 #
 # this script uses the last timestamp in the SCRAPE_FILE to update the the
@@ -7,7 +9,7 @@
 
 # set working directory
 cd `dirname "${BASH_SOURCE[0]}"`
-cd ..
+cd ../..
 
 # remote server info
 REMOTE=jmh182@dcc-slogin.oit.duke.edu
