@@ -3,10 +3,14 @@ observation_model:
   parameters:
     shape1: 1
     shape2: 1
+  parameters_tf:
+    shape1: 1
+    shape2: 1
   description: |
     Dives are observed according to a systematic sampling design.  Observations
     are made at times t_i = t0 + eps + (i-1) * dt, where the dive begins at
     t0 = 0, eps ~ Uniform(-tstep, tstep), and dt is the time between
     observations.  Observations at times before t0 are ignored, and the offset
     eps is unknown.  The Uniform distribution is implemented via scaling and
-    shifting a beta distribution with parameters shape1 and shape2.
+    shifting a beta distribution with parameters shape1 and shape2.  A similar
+    correction is made for the end of the dive.
