@@ -31,10 +31,12 @@ if(length(args)>0) {
 rm(args,i)
 
 groups = list(
-  data = 'sim_tyack_more_300',
-  observation_model = 'exact_systematic',
-  priors = 'simulation_priors',
-  sampler = 'prod'
+  data = 'zc84_800',
+  observation_model = 'uniform_systematic',
+  priors = 'tyack_priors',
+  sampler = 'prod',
+  subset = 'all_dives',
+  validation= 'holdout_half'
 )
 
 # build configuration
