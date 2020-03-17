@@ -1,0 +1,53 @@
+# transfer files that were changed since last scrape.
+#
+# this script uses the last timestamp in the SCRAPE_FILE to update the the
+# contents of the output/ directory.  the script can be faster than a full rsync
+# update of the output/ directory because the LAST_SCRAPE timestamp allows us to
+# immediately focus on the exact files that have changed.
+
+# set working directory
+cd `dirname "${BASH_SOURCE[0]}"`
+cd ..
+
+# remote server info
+REMOTE=jmh182@dcc-slogin.oit.duke.edu
+REMOTE_BASE="/hpc/group/gelfandlab/jmh_scratch/analysis/output"
+
+# sync Rout files
+echo "Sync .Rout files."
+rsync -r jmh182@dcc-slogin.oit.duke.edu:/hpc/group/gelfandlab/jmh_scratch/analysis/*.Rout ./
+
+# load timestamp of last scrape; create SCRAPE_FILE if it does not exist
+SCRAPE_FILE="scrape_dates.txt"
+if [ ! -f "$SCRAPE_FILE" ]; then
+    echo "# server scrape dates" >> $SCRAPE_FILE
+    echo "Tue Mar 16 12:00:00 MDT 2020" >> $SCRAPE_FILE
+fi
+LAST_SCRAPE=`tail -1 $SCRAPE_FILE`
+
+# push last scrape timestamp to server
+echo "Sending last scrape date ($LAST_SCRAPE) to [$REMOTE]."
+ssh $REMOTE "touch -d \"$LAST_SCRAPE\" start"
+
+# timestamp for current scrape
+CURRENT_SCRAPE=`date`
+
+# get list of changed output files since last scrape
+echo "Pulling list of files changed since last scrape."
+UPDATE_LIST=`ssh $REMOTE find $REMOTE_BASE -newer start -type f`
+
+# download changed files
+echo "Pulling changed files."
+for SRC in $UPDATE_LIST
+do
+  DST=`echo $SRC | sed -e "s/.*\/output/output/g"`
+  mkdir -p `dirname $DST`
+  echo "Transferring to [$DST]..."
+  scp $REMOTE:$SRC $DST
+done
+
+# save date of current scrape
+echo "Saving timestamp of current scrape ($CURRENT_SCRAPE)."
+echo $CURRENT_SCRAPE >> $SCRAPE_FILE
+
+echo "FIN."

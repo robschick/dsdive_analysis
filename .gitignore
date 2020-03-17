@@ -6,3 +6,4 @@
 *.Rout
 output/
 .Rproj.user
+scrape_dates.txt
