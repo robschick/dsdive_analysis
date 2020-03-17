@@ -565,19 +565,31 @@ pl = ggplot(df, aes(x = (depth), y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
                      # labels = paste(unique(time)/60, 'min', sep = ' '))) + 
   theme_few()
 
+time_labeller = function(labels, multi_line = TRUE) 
+{
+  labels <- lapply(labels, function(lab) {
+    paste('t =', lab, 'min.', sep = ' ')
+  })
+  if (multi_line) {
+    labels
+  }
+  else {
+    collapse_labels_lines(labels)
+  }
+}
+
 pl.pub = ggplot(df %>% filter(time/60 >= 5, time/60 <= 60), 
                 aes(x = (depth), y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
                     fill = Distribution, col = Distribution, 
                     group = Distribution)) + 
-  geom_ribbon(alpha = .1, col = NA) + 
+  # geom_ribbon(alpha = .1, col = NA) + 
   geom_point(size = 1) + 
   geom_line(lty = 1, alpha = .2, lwd = .5) + 
   scale_color_brewer(type = 'qual', palette = 'Dark2') + 
   scale_fill_brewer(type = 'qual', palette = 'Dark2') +
   xlab('Depth (m)') + 
   ylab(expression(P('\u2113'(t) <= x))) + 
-  facet_wrap(~factor(paste('t =', time/60, 'min.', sep = ' '))) +  
-  # labels = paste(unique(time)/60, 'min', sep = ' '))) + 
+  facet_wrap(~factor(time/60), labeller = time_labeller) +  
   theme_few()
 
 ggsave(pl.pub, filename = file.path(o, 'depths_by_time_cdf_pub.png'), 
@@ -679,7 +691,7 @@ pl = ggplot(df, aes(x = stage.duration/60, y = cdf, ymin = cdf.lwr,
   theme_few() 
 
 ggsave(pl, filename = file.path(o, 'stage_duration_cdfs.png'), 
-       dpi = 'print')
+       dpi = 'print', width = 16, height = 8)
 
 sink(file.path(o, paste('stage_duration_chisq.txt')))
 r = lapply(levels(df$stage), function(s) {
