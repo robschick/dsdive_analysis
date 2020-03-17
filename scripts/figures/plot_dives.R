@@ -1,9 +1,6 @@
 # configuration tools
 library(composr)
 library(yaml)
-# parallel tools
-require(Rmpi, lib.loc = c('.', .libPaths()))
-require(snow, lib.loc = c('.', .libPaths()))
 # modeling tools
 library(dsdive, lib.loc = c('.', .libPaths()))
 # validation tools
@@ -11,8 +8,6 @@ library(dplyr)
 library(ggplot2)
 library(ggthemes)
 library(tidyr)
-library(forcats)
-library(KSgeneral)
 
 
 #
