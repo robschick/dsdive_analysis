@@ -50,6 +50,7 @@ out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name,
 
 # load data and utility functions
 source(file.path('scripts', 'utils', 'datafns.R'))
+source(file.path('scripts', 'utils', '85pct_rule.R'))
 
 
 #
@@ -70,14 +71,17 @@ dives.obs.list = lapply(dives.obs, function(d) d$dive)[fit.inds$validate]
 tstep = diff(dives.obs[[1]]$dive$times[1:2])
 tstep.seq = tstep
 
+# use 85% rule to approximate stage transition times
+times.stages.est = times.stages(dives.obs = dives.obs)[fit.inds$validate,]
+
 # extract information about validation dives
 n.dives = length(dives.obs.list)
 validation.obs = do.call(rbind, lapply(1:n.dives, function(ind) {
   # extract dive 
   d = dives.obs.list[[ind]]
   # extract estimates of stage durations
-  stages.dur = diff(c(0, d$times[c(FALSE, diff(d$stages.est)==1)], 
-                      d$times[length(d$times)]))
+  stages.dur = times.stages.est[ind,]*60
+  stages.dur[3] = d$times[length(d$times)] - sum(stages.dur)
   # loop over all observation times
   do.call(rbind, lapply(tstep.seq, function(tstep) {
     # observed duration of dive
@@ -90,9 +94,9 @@ validation.obs = do.call(rbind, lapply(1:n.dives, function(ind) {
       n.obs = length(d$times),
       n.tx.obs = sum(diff(d$depths) != 0),
       tstep = tstep,
-      dur.s1 = stages.dur[1],
-      dur.s2 = stages.dur[2], 
-      dur.s3 = stages.dur[3]
+      dur.s1 = as.numeric(stages.dur[1]),
+      dur.s2 = as.numeric(stages.dur[2]), 
+      dur.s3 = as.numeric(stages.dur[3])
     )
   }))
 }))

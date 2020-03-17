@@ -33,6 +33,7 @@ dir.create(out.dir, recursive = TRUE)
 
 # load data and utility functions
 source(file.path('scripts', 'utils', 'datafns.R'))
+source(file.path('scripts', 'utils', '85pct_rule.R'))
 
 
 #
@@ -123,39 +124,7 @@ lambda2.prior = gamma.param(mu = cfg$priors$forage_speed$mu,
 lambda3.prior = gamma.param(mu = cfg$priors$ascent_speed$mu, 
                             sd = cfg$priors$ascent_speed$sd)
 
-# use 85% max depth rule to determine time in stages
-times.stages = do.call(rbind, lapply(dives.obs, function(d) {
-  # extract depths
-  depths = d$depth.bins$center[d$dive$depths]
-  # find max depth, and stage threshold
-  max.depth = max(depths)
-  stage.thresh = .85 * max.depth
-  # compute observed stage vector
-  bottom.range = range(which(depths >= stage.thresh))
-  if(length(unique(bottom.range))==1) {
-    bottom.range[2] = bottom.range[1] + 1
-  }
-  stages = stagevec(length.out = length(depths), breaks = bottom.range)
-  # linearly interpolate to find stage transition times
-  t.inds = which(diff(stages)==1)
-  t.stages = sapply(t.inds, function(ind) {
-    # get start and end times/depths
-    d0 = depths[ind]
-    t0 = d$dive$times[ind]
-    df = depths[ind+1]
-    tf = d$dive$times[ind+1]
-    # compute time at which stage.thresh is crossed
-    if(df==d0) {
-      mean(c(t0,tf))
-    } else {
-      (stage.thresh - d0)/(df-d0) * (tf-t0) + t0
-    }
-  })
-  # return results
-  data.frame(sub.time.min = t.stages[1]/60, 
-             bottom.time.min = diff(t.stages)/60)
-}))
-
+times.stages.est = times.stages(dives.obs = dives.obs)
 
 if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
   # load stage transition time priors for simulations from disk
@@ -164,8 +133,8 @@ if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
   T2.prior = list(estimate = params$T2.params)
 } else {
   # use 85% rule to determine stage transition time priors
-  T1.prior = fitdistr(x = times.stages$sub.time.min, densfun = 'gamma')
-  T2.prior = fitdistr(x = times.stages$bottom.time.min, densfun = 'gamma')
+  T1.prior = fitdistr(x = times.stages.est$sub.time.min, densfun = 'gamma')
+  T2.prior = fitdistr(x = times.stages.est$bottom.time.min, densfun = 'gamma')
 }
 
 # beta.summary = function(a,b) {
