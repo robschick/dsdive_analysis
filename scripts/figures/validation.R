@@ -31,7 +31,7 @@ if(length(args)>0) {
 rm(args,i)
 
 groups = list(
-  data = 'zc84',
+  data = 'zc84_800',
   observation_model = 'uniform_systematic',
   priors = 'tyack_priors',
   sampler = 'prod',
@@ -42,6 +42,9 @@ groups = list(
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
+
+# max_depth = 1e3
+max_depth = 800
 
 # output paths
 out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
@@ -390,7 +393,7 @@ bin_start_max = cfg$subset$bin_start_max
 df = rbind(
   postpred.samples.obs %>% 
     filter(!(sample %in% burn),
-           max.depth.obs >= 1e3,
+           max.depth.obs >= max_depth,
            duration.obs >= min_dur,
            duration.obs <= max_dur,
            depth.start.obs <= bin_start_max) %>% 
@@ -455,7 +458,7 @@ save(df, r, file = file.path(o, paste('max_observed_depth.RData')))
 df = rbind(
   postpred.samples.obs %>% 
     filter(!(sample %in% burn),
-           max.depth.obs >= 1e3,
+           max.depth.obs >= max_depth,
            duration.obs >= min_dur,
            duration.obs <= max_dur,
            depth.start.obs <= bin_start_max) %>%
@@ -520,7 +523,7 @@ save(df, r, file = file.path(o, paste('observed_duration.RData')))
 df = rbind(
   postpred.depthseq %>% 
     filter(!(sample %in% burn),
-           max.depth.obs >= 1e3,
+           max.depth.obs >= max_depth,
            duration.obs >= min_dur,
            duration.obs <= max_dur,
            depth.start.obs <= bin_start_max) %>%
@@ -635,7 +638,7 @@ save(df, r, file = file.path(o, paste('depths_by_time.RData')))
 df = rbind(
   postpred.samples.obs %>% 
     filter(!(sample %in% burn),
-           max.depth.obs >= 1e3,
+           max.depth.obs >= max_depth,
            duration.obs >= min_dur,
            duration.obs <= max_dur,
            depth.start.obs <= bin_start_max) %>%
