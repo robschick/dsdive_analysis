@@ -30,7 +30,7 @@ if(length(args)>0) {
 rm(args,i)
 
 groups = list(
-  data = 'zc84',
+  data = 'zc84_800',
   observation_model = 'uniform_systematic',
   priors = 'tyack_priors',
   sampler = 'prod',
@@ -189,3 +189,15 @@ dev.off()
 sink(file.path(o, 'parameter_correlations.txt'))
 round(cor(state$theta),2)
 sink()
+
+# posterior t0 offests
+png(file.path(o, 't0_offset.png'), width = 480*2)
+plot(density(state$trace.offsets[-(1:cfg$sampler$burn),]), 
+     xlab = expression(epsilon), main = 'Posterior density')
+dev.off()
+
+# posterior tf offests
+png(file.path(o, 'tf_offset.png'), width = 480*2)
+plot(density(state$trace.offsets.tf[-(1:cfg$sampler$burn),]), 
+     xlab = expression(epsilon), main = 'Posterior density')
+dev.off()
