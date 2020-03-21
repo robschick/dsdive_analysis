@@ -75,10 +75,6 @@ fit.inds = fit.ind.fn(dives.obs = dives.obs,
 # initial parameters
 #
 
-params = list(
-  beta = c(.95, .05),
-  lambda = c(1.25, .3, .5)
-)
 if(cfg$sampler$restart) {
   # load existing output
   load(file.path(out.dir, cfg$base_names$fit))
@@ -213,7 +209,6 @@ dump.state = function(state) {
 
 # Save crash info to file last.dump.rda
 dump_on_error <- function() {
-  dump.frames(dumpto = file.path(out.dir, 'last.dump'), to.file = TRUE)
   dump.frames(dumpto = file.path(out.dir, 'last.dump'), to.file = TRUE, 
               include.GlobalEnv = TRUE)
 }
@@ -221,7 +216,6 @@ options(error = dump_on_error)
 
 fit = dsdive.gibbs.obs(
   dsobs.list = dives.obs.list[fit.inds$fit], 
-  t.stages.list = t.stages.list[fit.inds$fit], 
   t.stages.list = t.stages, 
   beta.init = params$beta, lambda.init = params$lambda, 
   verbose = cfg$sampler$verbose, 
@@ -233,7 +227,6 @@ fit = dsdive.gibbs.obs(
   depth.bins = depth.bins, T1.prior.params = T1.prior.params, 
   T2.prior.params = T2.prior.params, max.width = 100, max.width.offset = 60, 
   t0.prior.params = unlist(cfg$observation_model$parameters),
-  tf.prior.params = unlist(cfg$observation_model$parameters_tf))
   tf.prior.params = unlist(cfg$observation_model$parameters_tf), 
   offsets = offsets, offsets.tf = offsets.tf)
 
