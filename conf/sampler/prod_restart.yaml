@@ -1,0 +1,9 @@
+sampler:
+  name: prod
+  verbose: TRUE
+  checkpoint_interval: 1800
+  iterations: 10000
+  burn: 1000
+  restart: TRUE
+  description: Long run of Gibbs sampler for full analyses, but will load
+    posterior samples

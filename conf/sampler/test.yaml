@@ -4,4 +4,5 @@ sampler:
   checkpoint_interval: 10
   iterations: 100
   burn: 1
+  restart: FALSE
   description: Short run of Gibbs sampler for quickly getting sampler output.

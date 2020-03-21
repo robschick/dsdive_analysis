@@ -4,6 +4,7 @@ library(yaml, lib.loc = c('singularity/libs', .libPaths()))
 # modeling tools
 library(dsdive, lib.loc = c('singularity/libs', .libPaths()))
 library(MASS)
+rm(list = ls())
 
 
 #
@@ -78,6 +79,31 @@ params = list(
   beta = c(.95, .05),
   lambda = c(1.25, .3, .5)
 )
+if(cfg$sampler$restart) {
+  # load existing output
+  load(file.path(out.dir, cfg$base_names$fit))
+  load(file.path(out.dir, cfg$base_names$fit_inds))
+  # reconfigure remaining samples to draw
+  it = nrow(state$theta)
+  cfg$sampler$iterations = cfg$sampler$iterations - it
+  # extract last params
+  params = list(
+    beta = state$theta[1:2],
+    lambda = state$theta[3:5]
+  )
+  t.stages = state$trace.t.stages[[it]]
+  offsets = state$trace.offsets[it,]
+  offsets.tf = state$trace.offsets.tf[it,]
+} else {
+  params = list(
+    beta = c(.95, .05),
+    lambda = c(1.25, .3, .5)
+  )
+  t.stages = t.stages.list[fit.inds$fit]
+  n = length(t.stages)
+  offsets = rep(0, n)
+  offsets.tf = rep(0, n)
+}
 
 
 #
@@ -188,12 +214,15 @@ dump.state = function(state) {
 # Save crash info to file last.dump.rda
 dump_on_error <- function() {
   dump.frames(dumpto = file.path(out.dir, 'last.dump'), to.file = TRUE)
+  dump.frames(dumpto = file.path(out.dir, 'last.dump'), to.file = TRUE, 
+              include.GlobalEnv = TRUE)
 }
 options(error = dump_on_error)
 
 fit = dsdive.gibbs.obs(
   dsobs.list = dives.obs.list[fit.inds$fit], 
   t.stages.list = t.stages.list[fit.inds$fit], 
+  t.stages.list = t.stages, 
   beta.init = params$beta, lambda.init = params$lambda, 
   verbose = cfg$sampler$verbose, 
   maxit = cfg$sampler$iterations, checkpoint.fn = dump.state, 
@@ -205,9 +234,17 @@ fit = dsdive.gibbs.obs(
   T2.prior.params = T2.prior.params, max.width = 100, max.width.offset = 60, 
   t0.prior.params = unlist(cfg$observation_model$parameters),
   tf.prior.params = unlist(cfg$observation_model$parameters_tf))
+  tf.prior.params = unlist(cfg$observation_model$parameters_tf), 
+  offsets = offsets, offsets.tf = offsets.tf)
 
 options(error = NULL)
 
 if(exists('fit')) {
+  if(cfg$sampler$restart) {
+    fit$theta = rbind(state$theta, fit$theta)
+    fit$trace.t.stages = c(state$trace.t.stages, fit$trace.t.stages)
+    fit$trace.offsets = c(state$trace.offsets, fit$trace.offsets)
+    fit$trace.offsets.tf = c(state$trace.offsets.tf, fit$trace.offsets.tf)
+  }
   dump.state(state = fit)
 }
