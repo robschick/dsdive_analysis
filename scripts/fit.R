@@ -209,9 +209,9 @@ dump.state = function(state) {
   if(cfg$sampler$restart) {
     state$theta = rbind(state.bak$theta, state$theta)
     state$trace.t.stages = c(state.bak$trace.t.stages, state$trace.t.stages)
-    state$trace.offsets = c(state.bak$trace.offsets, state$trace.offsets)
-    state$trace.offsets.tf = c(state.bak$trace.offsets.tf, 
-                               state$trace.offsets.tf)
+    state$trace.offsets = rbind(state.bak$trace.offsets, state$trace.offsets)
+    state$trace.offsets.tf = rbind(state.bak$trace.offsets.tf, 
+                                   state$trace.offsets.tf)
   }
   
   save.time = date()
