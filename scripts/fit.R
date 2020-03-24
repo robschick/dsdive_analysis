@@ -90,6 +90,8 @@ if(cfg$sampler$restart) {
   t.stages = state$trace.t.stages[[it]]
   offsets = state$trace.offsets[it,]
   offsets.tf = state$trace.offsets.tf[it,]
+  # label state for merging
+  state.bak = state
 } else {
   params = list(
     beta = c(.95, .05),
@@ -203,6 +205,15 @@ save(fit.inds, file = file.path(out.dir, cfg$base_names$fit_inds))
 write_yaml(cfg, file = file.path(out.dir, 'cfg.yaml'))
 
 dump.state = function(state) {
+  
+  if(cfg$sampler$restart) {
+    state$theta = rbind(state.bak$theta, state$theta)
+    state$trace.t.stages = c(state.bak$trace.t.stages, state$trace.t.stages)
+    state$trace.offsets = c(state.bak$trace.offsets, state$trace.offsets)
+    state$trace.offsets.tf = c(state.bak$trace.offsets.tf, 
+                               state$trace.offsets.tf)
+  }
+  
   save.time = date()
   save(state, save.time, params, file = file.path(out.dir, cfg$base_names$fit))
 }
@@ -233,11 +244,5 @@ fit = dsdive.gibbs.obs(
 options(error = NULL)
 
 if(exists('fit')) {
-  if(cfg$sampler$restart) {
-    fit$theta = rbind(state$theta, fit$theta)
-    fit$trace.t.stages = c(state$trace.t.stages, fit$trace.t.stages)
-    fit$trace.offsets = c(state$trace.offsets, fit$trace.offsets)
-    fit$trace.offsets.tf = c(state$trace.offsets.tf, fit$trace.offsets.tf)
-  }
   dump.state(state = fit)
 }
