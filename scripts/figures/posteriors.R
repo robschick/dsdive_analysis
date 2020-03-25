@@ -12,6 +12,7 @@ library(ggplot2)
 library(ggthemes)
 library(coda)
 library(xtable)
+library(tidyr)
 
 
 #
@@ -67,6 +68,22 @@ dives.obs = dives.load(path = cfg$data$path,
 load(file.path(out.dir, cfg$base_names$fit))
 
 m = mcmc(state$theta[-(1:cfg$sampler$burn),])
+
+
+#
+# load posterior predictive samples, if they exist
+#
+
+pred.dir = file.path(out.dir, cfg$sub_paths$posterior_predictions)
+if(dir.exists(pred.dir)) {
+  postpred.files = dir(file.path(out.dir, cfg$sub_paths$posterior_predictions), 
+                       pattern = '*.RData', full.names = TRUE)
+  postpred.samples = do.call(c, lapply(postpred.files, function(f) {
+    load(f)
+    samples
+  }))
+  
+}
 
 
 #
@@ -201,3 +218,117 @@ png(file.path(o, 'tf_offset.png'), width = 480*2)
 plot(density(state$trace.offsets.tf[-(1:cfg$sampler$burn),]), 
      xlab = expression(epsilon), main = 'Posterior density')
 dev.off()
+
+
+#
+# processs posterior predictive distribution, if it exists
+#
+
+if(exists('postpred.samples')) {
+  
+  # set plotting directory
+  o = file.path(out.dir, cfg$sub_paths$figures, 
+                cfg$sub_paths$posterior_predictions)
+  
+  # create directory, if necessary
+  dir.create(o, recursive = TRUE)
+  
+  # build non-overlapping depth bins, for display
+  depth.bins = dives.obs[[1]]$depth.bins %>% 
+    mutate(bin.min = center - halfwidth, 
+           bin.max = center + halfwidth,
+           bin.ind = 1:nrow(depth.bins))
+  depth.bins$bin.min[-1] = depth.bins$bin.max[1:(nrow(depth.bins)-1)]
+  
+  # format depth bin display labels
+  depth.bins = depth.bins %>% mutate(
+    bin.range = paste('[', round(bin.min), ', ', round(bin.max), ')', 
+                      sep =''),
+    bin.range = ordered(bin.range, bin.range[bin.ind])
+  )
+  
+  # only output information about posterior predictive dives that exceed this 
+  # threshold
+  max_depth = 800
+  
+  burn = 1:cfg$sampler$burn
+  
+  # extract summary information for posterior predictive dives
+  postpred.summaries = do.call(rbind, lapply(postpred.samples[-burn], 
+                                             function(d) {
+
+    # compute stage durations
+    t.stages = c(0,
+                 d$times[c(FALSE, diff(d$stages)==1)],
+                 d$times[length(d$times)])
+    stage.durations = diff(t.stages)
+    
+    # max depth bin
+    max.bin.ind = max(d$depths)
+    
+    # summary information
+    data.frame(
+      max.depth = depth.bins$center[max.bin.ind],
+      bin.range = depth.bins$bin.range[max.bin.ind],
+      duration = t.stages[3],
+      'Stage 1' = stage.durations[1],
+      'Stage 2' = stage.durations[2],
+      'Stage 3' = stage.durations[3]
+    )
+  }))
+  
+  # dive durations
+  pl = postpred.summaries %>% 
+    filter(max.depth >= max_depth) %>% 
+    ggplot(aes(x = duration/60)) + 
+    stat_density(geom = 'line') + 
+    xlab('Dive duration (min.)') + 
+    ylab('Post. Pred. Density') + 
+    theme_few() + 
+    theme(panel.border = element_blank())
+  
+  ggsave(pl, filename = file.path(o, 'durations.png'), dpi = 'print')
+  
+  # max depth
+  pl = postpred.summaries %>% 
+    filter(max.depth >= max_depth) %>%
+    mutate(total = length(max.depth)) %>% 
+    group_by(bin.range) %>%
+    summarise(prob = n() / total[1]) %>%
+    ggplot(aes(x = bin.range, y = prob)) + 
+    geom_bar(stat = 'identity') +
+    xlab('Maximum depth range (m)') + 
+    ylab('Post. Pred. Probability') + 
+    theme_few() + 
+    theme(panel.border = element_blank())
+  
+  ggsave(pl, filename = file.path(o, 'max_depths.png'), dpi = 'print')
+  
+  label_sub = function (labels, multi_line = TRUE) {
+    labels <- lapply(labels, function(lab) {
+      gsub('\\.', ' ', as.character(lab)) 
+      })
+    if (multi_line) {
+      labels
+    }
+    else {
+      collapse_labels_lines(labels)
+    }
+  }
+  
+  # stage durations
+  pl = postpred.summaries %>% 
+    filter(max.depth >= max_depth) %>% 
+    pivot_longer(cols = c('Stage.1', 'Stage.2', 'Stage.3'), 
+                 names_to = 'stage', 
+                 values_to = 'stage_duration') %>% 
+    ggplot(aes(x = stage_duration/60)) + 
+    stat_density(geom = 'line') + 
+    xlab('Stage duration (min)') + 
+    ylab('Post. Pred. Density') + 
+    facet_wrap(~stage, labeller = label_sub) + 
+    theme_few()
+  
+  ggsave(pl, filename = file.path(o, 'stage_durations.png'), dpi = 'print')
+  
+}
