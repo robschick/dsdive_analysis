@@ -287,7 +287,8 @@ if(exists('postpred.samples')) {
     theme_few() + 
     theme(panel.border = element_blank())
   
-  ggsave(pl, filename = file.path(o, 'durations.png'), dpi = 'print')
+  ggsave(pl, filename = file.path(o, 'durations.png'), dpi = 'print', 
+         width = 5, height = 4)
   
   # max depth
   pl = postpred.summaries %>% 
@@ -302,7 +303,8 @@ if(exists('postpred.samples')) {
     theme_few() + 
     theme(panel.border = element_blank())
   
-  ggsave(pl, filename = file.path(o, 'max_depths.png'), dpi = 'print')
+  ggsave(pl, filename = file.path(o, 'max_depths.png'), dpi = 'print', 
+         width = 5, height = 4)
   
   label_sub = function (labels, multi_line = TRUE) {
     labels <- lapply(labels, function(lab) {
@@ -329,6 +331,7 @@ if(exists('postpred.samples')) {
     facet_wrap(~stage, labeller = label_sub) + 
     theme_few()
   
-  ggsave(pl, filename = file.path(o, 'stage_durations.png'), dpi = 'print')
+  ggsave(pl, filename = file.path(o, 'stage_durations.png'), dpi = 'print', 
+         width = 8, height = 4)
   
 }
