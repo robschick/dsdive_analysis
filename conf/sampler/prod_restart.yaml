@@ -1,5 +1,5 @@
 sampler:
-  name: prod
+  name: prod_restart
   verbose: TRUE
   checkpoint_interval: 1800
   iterations: 10000
