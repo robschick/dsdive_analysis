@@ -17,7 +17,7 @@ observation_model=\"exact_systematic\",\
 priors=\"tyack_simulation_priors\",\
 subset=\"all_dives\",\
 validation=\"no_validation\",\
-sampler=\"prod\")"
+sampler=\"prod_warmup\")"
 
 date
 START=`date +%s`
