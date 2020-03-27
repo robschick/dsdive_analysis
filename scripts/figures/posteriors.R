@@ -334,4 +334,20 @@ if(exists('postpred.samples')) {
   ggsave(pl, filename = file.path(o, 'stage_durations.png'), dpi = 'print', 
          width = 8, height = 4)
   
+  #
+  # textual summaries
+  #
+  
+  sink(file.path(o, 'post_pred_summaries.txt'))
+  
+  summary(mcmc(postpred.summaries %>% 
+                 filter(max.depth >= max_depth) %>% 
+                 select(-bin.range))/60)
+  
+  round(HPDinterval(mcmc(postpred.summaries %>% 
+                filter(max.depth >= max_depth) %>% 
+                  select(-bin.range))/60))
+  
+  sink()
+  
 }
