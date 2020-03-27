@@ -5,4 +5,5 @@ sampler:
   iterations: 10000
   burn: 1000
   restart: FALSE
+  warmup: Inf
   description: Long run of Gibbs sampler for full analyses.

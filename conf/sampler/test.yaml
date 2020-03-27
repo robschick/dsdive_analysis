@@ -5,4 +5,5 @@ sampler:
   iterations: 100
   burn: 1
   restart: FALSE
+  warmup: Inf
   description: Short run of Gibbs sampler for quickly getting sampler output.

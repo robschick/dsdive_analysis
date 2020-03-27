@@ -1,0 +1,12 @@
+sampler:
+  name: prod
+  verbose: TRUE
+  checkpoint_interval: 1800
+  iterations: 10000
+  burn: 1000
+  restart: FALSE
+  warmup: 500
+  description: Long run of Gibbs sampler for full analyses.  Sampler will stop
+    updating model parameter and offset proposal distributions after 500
+    iterations; stage transition time proposal distributions will continue to
+    be updated.
