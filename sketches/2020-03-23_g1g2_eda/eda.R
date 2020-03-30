@@ -6,6 +6,12 @@ library(dsdive)
 library(MASS)
 library(yaml)
 
+
+# output path
+
+o = file.path('sketches', '2020-03-23_g1g2_eda')
+
+
 #
 # load and format depth series
 #
@@ -86,7 +92,7 @@ fit.surface_interval = fitdistr(
 # can result from a HMM where shallow dives are exponentially distributed, and 
 # switching probability between classes is low 
 lambda = 5
-dive.lengths %>% ggplot(aes(x = surface.previous/60, 
+pl = dive.lengths %>% ggplot(aes(x = surface.previous/60, 
                             y = duration/60)) + 
   geom_point(alpha = .15) + 
   geom_quantile(method = 'rqss', quantiles = .5, col = 'black', 
@@ -99,9 +105,11 @@ dive.lengths %>% ggplot(aes(x = surface.previous/60,
   theme_few() + 
   theme(panel.border = element_blank())
 
+ggsave(pl, filename = file.path(o, 'duration_time.png'), dpi = 'print')
+
 # a gamma fit to the time between last deep dive looks reasonable with the 
 # oversimplified HMM assumptions, and seem to pair well with Tyack (2006)
-dive.lengths %>% ggplot(aes(x = surface.previous/60)) + 
+pl = dive.lengths %>% ggplot(aes(x = surface.previous/60)) + 
   stat_density(geom='line') + 
   stat_function(fun = dgamma, args = as.list(fit.surface_interval$estimate),  
                 lty = 4) + 
@@ -109,3 +117,5 @@ dive.lengths %>% ggplot(aes(x = surface.previous/60)) +
   ylab('Density') + 
   theme_few() + 
   theme(panel.border = element_blank())
+
+ggsave(pl, filename = file.path(o, 'marginal_fit.png'), dpi = 'print')
