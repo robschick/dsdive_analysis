@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name unif_tyak_validation_empirical_priors
+#SBATCH --job-name unif_tyak_validation_fixed_priors
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL
@@ -11,7 +11,7 @@
 CFGSTRING="--args groups=list(\
 data=\"zc84_800\",\
 observation_model=\"uniform_systematic\",\
-priors=\"tyack_priors\",\
+priors=\"tyack_priors_fixed_stage\",\
 sampler=\"prod\",\
 subset=\"all_dives\",\
 validation=\"holdout_half\")"
