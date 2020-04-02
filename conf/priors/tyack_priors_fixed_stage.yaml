@@ -1,5 +1,5 @@
 sampler:
-  name: tyack_priors
+  name: tyack_priors_fixed_stage
   descent_speed: # parameterization for gamma prior on lambda1 (m/s)
     mu: 1.5
     sd: .1
@@ -15,8 +15,12 @@ sampler:
   ascent_preference:
     mu: .1
     shape1: 2
-  stage1_tx: empirical
-  stage2_tx: empirical
-  description: Use the 85% rule to estimate prior parameters for stage
-    transition times from data.  Set priors for descent and ascent speeds from
-    Tyack (2006), Table 2, and infer prior for forage speed from same paper.
+  stage1_tx:
+    mu: 1200
+    sd: 600
+  stage2_tx:
+    mu: 1200
+    sd: 600
+  description: Set priors for descent and ascent speeds from Tyack (2006),
+    Table 2, and infer prior for forage speed from same paper.  Stage transition
+    priors are designed to be diffuse.

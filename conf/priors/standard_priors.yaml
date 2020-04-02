@@ -15,5 +15,7 @@ sampler:
   ascent_preference:
     mu: .1
     shape1: 2
+  stage1_tx: empirical
+  stage2_tx: empirical
   description: Use the 85% rule to estimate prior parameters for stage
     transition times from data.
