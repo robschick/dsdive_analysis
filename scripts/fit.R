@@ -155,11 +155,32 @@ if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
   load(file.path(cfg$data$path, '..', 'params', 'params.RData'))
   T1.prior = list(estimate = params$T1.params)
   T2.prior = list(estimate = params$T2.params)
+  # convert scale of prior parameters from minutes to seconds
+  T1.prior.params = T1.prior$estimate / c(1, 60)
+  T2.prior.params = T2.prior$estimate / c(1, 60)
 } else {
-  # use 85% rule to determine stage transition time priors
-  T1.prior = fitdistr(x = times.stages.est$sub.time.min, densfun = 'gamma')
-  T2.prior = fitdistr(x = times.stages.est$bottom.time.min, densfun = 'gamma')
-}
+  
+  if(identical(cfg$priors$stage1_tx, 'empirical')) {
+    # use 85% rule to determine stage transition time priors
+    T1.prior = fitdistr(x = times.stages.est$sub.time.min, densfun = 'gamma')
+    # convert scale of prior parameters from minutes to seconds
+    T1.prior.params = T1.prior$estimate / c(1, 60)
+  } else {
+    T1.prior.params = gamma.param(mu = cfg$priors$stage1_tx$mu, 
+                                  sd = cfg$priors$stage1_tx$sd)
+  }
+  
+  if(identical(cfg$priors$stage2_tx, 'empirical')) {
+    # use 85% rule to determine stage transition time priors
+    T2.prior = fitdistr(x = times.stages.est$bottom.time.min, densfun = 'gamma')
+    # convert scale of prior parameters from minutes to seconds
+    T2.prior.params = T2.prior$estimate / c(1, 60)
+  } else {
+    T2.prior.params = gamma.param(mu = cfg$priors$stage2_tx$mu, 
+                                  sd = cfg$priors$stage2_tx$sd)
+  }
+  
+ }
 
 # beta.summary = function(a,b) {
 #   c(mean = a/(a+b),
@@ -189,10 +210,6 @@ if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
 # curve(dgamma(x = x, shape = T2.prior$estimate[1], rate = T2.prior$estimate[2]),
 #       xlab = expression(T^(2)~~(min.)), ylab = expression(f(T^(2))),
 #       from = 0, to = 60)
-
-# convert scale of prior parameters from minutes to seconds
-T1.prior.params = T1.prior$estimate / c(1, 60)
-T2.prior.params = T2.prior$estimate / c(1, 60)
 
 
 #
@@ -240,7 +257,7 @@ fit = dsdive.gibbs.obs(
   t0.prior.params = unlist(cfg$observation_model$parameters),
   tf.prior.params = unlist(cfg$observation_model$parameters_tf), 
   offsets = offsets, offsets.tf = offsets.tf, 
-  warmup = as.numeric(cfg$sampler$warmup))
+  warmup = as.numeric(cfg$sampler$warmup), cl = NULL)
 
 options(error = NULL)
 
