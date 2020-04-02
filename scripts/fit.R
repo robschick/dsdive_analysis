@@ -148,7 +148,7 @@ lambda2.prior = gamma.param(mu = cfg$priors$forage_speed$mu,
 lambda3.prior = gamma.param(mu = cfg$priors$ascent_speed$mu, 
                             sd = cfg$priors$ascent_speed$sd)
 
-times.stages.est = times.stages(dives.obs = dives.obs)
+times.stages.est = times.stages(dives.obs = dives.obs[fit.inds$fit])
 
 if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
   # load stage transition time priors for simulations from disk
