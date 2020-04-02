@@ -237,7 +237,7 @@ if(exists('postpred.samples')) {
   depth.bins = dives.obs[[1]]$depth.bins %>% 
     mutate(bin.min = center - halfwidth, 
            bin.max = center + halfwidth,
-           bin.ind = 1:nrow(depth.bins))
+           bin.ind = 1:n())
   depth.bins$bin.min[-1] = depth.bins$bin.max[1:(nrow(depth.bins)-1)]
   
   # format depth bin display labels
@@ -270,7 +270,7 @@ if(exists('postpred.samples')) {
     data.frame(
       max.depth = depth.bins$center[max.bin.ind],
       bin.range = depth.bins$bin.range[max.bin.ind],
-      duration = t.stages[3],
+      duration = t.stages[length(t.stages)],
       'Stage 1' = stage.durations[1],
       'Stage 2' = stage.durations[2],
       'Stage 3' = stage.durations[3]
@@ -290,12 +290,16 @@ if(exists('postpred.samples')) {
   ggsave(pl, filename = file.path(o, 'durations.png'), dpi = 'print', 
          width = 5, height = 4)
   
-  # max depth
-  pl = postpred.summaries %>% 
+  
+  # max depth table
+  df = postpred.summaries %>% 
     filter(max.depth >= max_depth) %>%
     mutate(total = length(max.depth)) %>% 
     group_by(bin.range) %>%
-    summarise(prob = n() / total[1]) %>%
+    summarise(prob = n() / total[1])
+  
+  # max depth
+  pl = df %>%
     ggplot(aes(x = bin.range, y = prob)) + 
     geom_bar(stat = 'identity') +
     xlab('Maximum depth range (m)') + 
@@ -334,6 +338,24 @@ if(exists('postpred.samples')) {
   ggsave(pl, filename = file.path(o, 'stage_durations.png'), dpi = 'print', 
          width = 8, height = 4)
   
+  # dive-stage durations
+  pl = postpred.summaries %>% 
+    filter(max.depth >= max_depth) %>% 
+    mutate('Overall.dive' = duration) %>% 
+    pivot_longer(cols = c('Stage.1', 'Stage.2', 'Overall.dive'), 
+                 names_to = 'stage', 
+                 values_to = 'stage_duration') %>% 
+    mutate(stage = ordered(stage, c('Stage.1', 'Stage.2', 'Overall.dive'))) %>%
+    ggplot(aes(x = stage_duration/60)) + 
+    stat_density(geom = 'line') + 
+    xlab('Duration (min)') + 
+    ylab('Post. Pred. Density') + 
+    facet_wrap(~stage, labeller = label_sub) + 
+    theme_few()
+  
+  ggsave(pl, filename = file.path(o, 'combined_durations.png'), dpi = 'print',
+         width = 8, height = 4)
+  
   #
   # textual summaries
   #
@@ -348,6 +370,10 @@ if(exists('postpred.samples')) {
                 filter(max.depth >= max_depth) %>% 
                   select(-bin.range))/60))
   
-  sink()
+  cat('\n\n')
+  
+  df
+  
+   sink()
   
 }
