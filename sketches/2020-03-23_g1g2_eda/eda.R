@@ -34,6 +34,20 @@ depth.bins = read.csv('data/depth_template.csv')
 depths$depth.bin = sapply(depths$Depth, 
                           function(d) which.min(abs(d - depth.bins$center)))
 
+# build non-overlapping depth bins, for display
+depth.bins = depth.bins %>% 
+  mutate(bin.min = center - halfwidth, 
+         bin.max = center + halfwidth,
+         bin.ind = 1:n())
+depth.bins$bin.min[-1] = depth.bins$bin.max[1:(nrow(depth.bins)-1)]
+
+# format depth bin display labels
+depth.bins = depth.bins %>% mutate(
+  bin.range = paste('[', round(bin.min), ', ', round(bin.max), ')', 
+                    sep =''),
+  bin.range = ordered(bin.range, bin.range[bin.ind])
+)
+
 
 #
 # load manual labels
@@ -59,6 +73,22 @@ dive.lengths = do.call(rbind, apply(dive.labels, 1, function(r) {
   duration = t.end - t.start,
   surface.previous = t.start - lag(t.end)
 )
+
+
+#
+# summary statistics for periods between deep dives
+#
+
+# identify underwater periods without deep dives
+shallow.periods = setdiff(1:nrow(uw.periods), dive.labels$uw.period)
+
+# extract depth bins for shallow dives
+shallow.dives = lapply(shallow.periods, function(uw) {
+  # indices of the underwater period
+  dive.inds = seq(from = uw.periods[uw,1], to = uw.periods[uw,2])
+  # depths 
+  depth.bins$bin.range[depths$depth.bin[dive.inds]]
+})
 
 
 #
@@ -119,3 +149,43 @@ pl = dive.lengths %>% ggplot(aes(x = surface.previous/60)) +
   theme(panel.border = element_blank())
 
 ggsave(pl, filename = file.path(o, 'marginal_fit.png'), dpi = 'print')
+
+# distribution of depth bins for shallow dives
+pl = data.frame(x = depth.bins$bin.range[do.call(c, shallow.dives)]) %>% 
+  mutate(total = n()) %>% 
+  group_by(x) %>% 
+  summarise(prob = length(x) / total[1]) %>% 
+  ggplot(aes(x = x, y = prob)) + 
+  xlab('Depth bin (m)') + 
+  ylab('Empirical probability') + 
+  geom_bar(stat = 'identity')  + 
+  ggtitle('Depth bin distribution outside deep dives') + 
+  theme_few() + 
+  theme(panel.border = element_blank(), 
+        text = element_text(size = 10))
+
+ggsave(pl, filename = file.path(o, 'shallow_depth_bin_distribution.pdf'), 
+       dpi = 'print', width = 8, height = 4)
+
+
+#
+# long time series plot of depth bins
+#
+
+df = data.frame(Date = depths$Date, 
+                Depth = depth.bins$center[depths$depth.bin],
+                bin.ind = depths$depth.bin) %>% 
+  mutate(surf = Depth * (bin.ind==1)) 
+
+pl = ggplot(df, aes(x = Date, y = Depth)) + 
+  geom_line(col = 'grey80', lwd = .5) +
+  geom_point(mapping = aes(x = Date, y = surf), 
+             data = df %>% filter(surf > 0),
+             size = .75) + 
+  scale_y_reverse('Depth bin center (m)') +
+  scale_x_datetime('Time', breaks = dateseq, date_labels = '%B %d') + 
+  ggtitle('zc84 (Surface observations marked by solid points)') + 
+  theme_few()
+
+ggsave(pl, filename = file.path(o, 'long_tag_record.pdf'), 
+       width = 150, height = 5, limitsize = FALSE)
