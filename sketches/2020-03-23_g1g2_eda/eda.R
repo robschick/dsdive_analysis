@@ -5,6 +5,7 @@ library(ggthemes)
 library(dsdive)
 library(MASS)
 library(yaml)
+library(suncalc)
 
 
 # output path
@@ -172,19 +173,48 @@ ggsave(pl, filename = file.path(o, 'shallow_depth_bin_distribution.pdf'),
 # long time series plot of depth bins
 #
 
+# lon/lat for cape hatteras
+cape.hatteras = c(lat = 35.254581, lon = -75.51995)
+
+# extract depth bin series
 df = data.frame(Date = depths$Date, 
                 Depth = depth.bins$center[depths$depth.bin],
                 bin.ind = depths$depth.bin) %>% 
-  mutate(surf = Depth * (bin.ind==1)) 
+  mutate(surf = Depth * (bin.ind==1))
+
+# compute date range
+date_range = c(floor_date(with_tz(df$Date[1], 'America/New_York'), 'day'),
+               ceiling_date(with_tz(df$Date[nrow(df)], 'America/New_York'), 
+                            'day'))
+
+# compute date axis breaks
+dateseq = seq(from = date_range[1], to = date_range[2], by = 'day')
+
+# astronomical sunrise/sunset calculations
+almanac = with_tz(getSunlightTimes(as.Date(dateseq), 
+                                   lat = cape.hatteras['lat'], 
+                                   lon = cape.hatteras['lon']),
+                  'America/New_York')
+
+# munged sunrise/sunset times for plotting
+night_periods = data.frame(begin = almanac$sunset[1:(nrow(almanac)-1)], 
+                           end = almanac$sunrise[-1])
 
 pl = ggplot(df, aes(x = Date, y = Depth)) + 
-  geom_line(col = 'grey80', lwd = .5) +
+  # day/night shading
+  geom_rect(mapping = aes(xmin = begin, xmax = end, ymin = 0, ymax = 1700),
+            data = night_periods[1:(nrow(night_periods)),], 
+            inherit.aes = FALSE, fill = 'grey95') + 
+  # depth bin time series
+  geom_line(col = 'grey70', lwd = .5) +
+  # points at surface
   geom_point(mapping = aes(x = Date, y = surf), 
              data = df %>% filter(surf > 0),
              size = .75) + 
+  # axis and plot formatting
   scale_y_reverse('Depth bin center (m)') +
   scale_x_datetime('Time', breaks = dateseq, date_labels = '%B %d') + 
-  ggtitle('zc84 (Surface observations marked by solid points)') + 
+  ggtitle('zc84 (Surface observations marked by solid points; almanac nighttime shaded)') + 
   theme_few()
 
 ggsave(pl, filename = file.path(o, 'long_tag_record.pdf'), 
