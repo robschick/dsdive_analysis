@@ -87,6 +87,22 @@ if(dir.exists(pred.dir)) {
 
 
 #
+# load prior predictive samples, if they exist
+#
+
+pred.dir = file.path(out.dir, cfg$sub_paths$prior_predictions)
+if(dir.exists(pred.dir)) {
+  priorpred.files = dir(file.path(out.dir, cfg$sub_paths$prior_predictions), 
+                       pattern = '*.RData', full.names = TRUE)
+  priorpred.samples = do.call(c, lapply(priorpred.files, function(f) {
+    load(f)
+    samples
+  }))
+  
+}
+
+
+#
 # posterior summaries
 #
 
@@ -277,6 +293,29 @@ if(exists('postpred.samples')) {
     )
   }))
   
+  # extract summary information for prior predictive dives
+  priorpred.summaries = do.call(rbind, lapply(priorpred.samples, 
+                                              function(d) {
+    # compute stage durations
+    t.stages = c(0,
+                 d$times[c(FALSE, diff(d$stages)==1)],
+                 d$times[length(d$times)])
+    stage.durations = diff(t.stages)
+    
+    # max depth bin
+    max.bin.ind = max(d$depths)
+     
+    # summary information
+    data.frame(
+       max.depth = depth.bins$center[max.bin.ind],
+       bin.range = depth.bins$bin.range[max.bin.ind],
+       duration = t.stages[length(t.stages)],
+       'Stage 1' = stage.durations[1],
+       'Stage 2' = stage.durations[2],
+       'Stage 3' = stage.durations[3]
+    )
+  }))
+
   # dive durations
   pl = postpred.summaries %>% 
     filter(max.depth >= max_depth) %>% 
@@ -322,13 +361,16 @@ if(exists('postpred.samples')) {
     }
   }
   
-  # stage durations
-  pl = postpred.summaries %>% 
+  # stage durations, with priors
+  pl = rbind(
+    cbind(postpred.summaries, Data = 'Posterior'),
+    cbind(priorpred.summaries, Data = 'Prior')
+  ) %>% 
     filter(max.depth >= max_depth) %>% 
     pivot_longer(cols = c('Stage.1', 'Stage.2', 'Stage.3'), 
                  names_to = 'stage', 
                  values_to = 'stage_duration') %>% 
-    ggplot(aes(x = stage_duration/60)) + 
+    ggplot(aes(x = stage_duration/60, col = Data)) + 
     stat_density(geom = 'line') + 
     xlab('Stage duration (min)') + 
     ylab('Post. Pred. Density') + 
@@ -338,23 +380,41 @@ if(exists('postpred.samples')) {
   ggsave(pl, filename = file.path(o, 'stage_durations.png'), dpi = 'print', 
          width = 8, height = 4)
   
+  # define plotting range for stage durations
+  durations_range = range(
+    postpred.summaries %>% 
+      filter(max.depth >= max_depth) %>% 
+      mutate('Overall.dive' = duration) %>% 
+      pivot_longer(cols = c('Stage.1', 'Stage.2', 'Overall.dive'), 
+                   names_to = 'stage', 
+                   values_to = 'stage_duration') %>% 
+      select(stage_duration) %>% 
+      unlist()
+  ) / 60 * c(1, 2)
+  
   # dive-stage durations
-  pl = postpred.summaries %>% 
+  pl = rbind(
+    cbind(postpred.summaries, Density = 'Post. Pred.'),
+    cbind(priorpred.summaries, Density = 'Prior')
+  ) %>% 
     filter(max.depth >= max_depth) %>% 
     mutate('Overall.dive' = duration) %>% 
     pivot_longer(cols = c('Stage.1', 'Stage.2', 'Overall.dive'), 
                  names_to = 'stage', 
                  values_to = 'stage_duration') %>% 
     mutate(stage = ordered(stage, c('Stage.1', 'Stage.2', 'Overall.dive'))) %>%
-    ggplot(aes(x = stage_duration/60)) + 
-    stat_density(geom = 'line') + 
+    ggplot(aes(x = stage_duration/60, col = Density)) + 
+    stat_density(geom = 'line', trim = TRUE) + 
+    scale_color_brewer(type = 'qual', palette = 'Dark2') + 
     xlab('Duration (min)') + 
-    ylab('Post. Pred. Density') + 
+    xlim(durations_range) + 
+    ylab('Density') + 
     facet_wrap(~stage, labeller = label_sub) + 
     theme_few()
   
   ggsave(pl, filename = file.path(o, 'combined_durations.png'), dpi = 'print',
          width = 8, height = 4)
+  
   
   #
   # textual summaries
@@ -362,17 +422,35 @@ if(exists('postpred.samples')) {
   
   sink(file.path(o, 'post_pred_summaries.txt'))
   
+  cat('====================================\n')
+  cat('Posterior predictive density results\n')
+  cat('====================================\n\n')
+  
   summary(mcmc(postpred.summaries %>% 
                  filter(max.depth >= max_depth) %>% 
-                 select(-bin.range))/60)
+                 dplyr::select(-bin.range))/60)
   
   round(HPDinterval(mcmc(postpred.summaries %>% 
                 filter(max.depth >= max_depth) %>% 
-                  select(-bin.range))/60))
+                  dplyr::select(-bin.range))/60))
   
   cat('\n\n')
   
   df
+  
+  cat('\n\n')
+  
+  cat('====================================\n')
+  cat('Prior predictive density results\n')
+  cat('====================================\n\n')
+  
+  summary(mcmc(priorpred.summaries %>% 
+                 filter(max.depth >= max_depth) %>% 
+                 dplyr::select(-bin.range))/60)
+  
+  round(HPDinterval(mcmc(priorpred.summaries %>% 
+                           filter(max.depth >= max_depth) %>% 
+                           dplyr::select(-bin.range))/60))
   
    sink()
   

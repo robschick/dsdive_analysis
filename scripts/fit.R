@@ -216,6 +216,8 @@ if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
 # gibbs sample
 #
 
+save(pi1.prior, pi2.prior, lambda1.prior, lambda2.prior, lambda3.prior,
+     file = file.path(out.dir, cfg$base_names$ctmc_priors))
 save(T1.prior.params, T2.prior.params, 
      file = file.path(out.dir, cfg$base_names$stage_priors))
 save(fit.inds, file = file.path(out.dir, cfg$base_names$fit_inds))

@@ -14,6 +14,7 @@ base_paths: # main output directory to save fits and figures from model runs
 sub_paths: # created under the output directory for each model run
   figures: figures
   posterior_predictions: posterior_predictions
+  prior_predictions: prior_predictions
   comparisons: comparisons
   dives: dives
   posteriors: posteriors
@@ -23,6 +24,10 @@ base_names: # files containing analysis artifacts/output
   fit: sampler_trace.RData  # MCMC chain from gibbs sampler over model params.
   fit_inds: fit_inds.RData  # indices that partition data into test/train sets
   stage_priors: stage_priors.RData # parameters for stage transition time priors
+  ctmc_priors: ctmc_priors.RData # parameters for CTMC priors
   posterior_predictions:
     file: samples_X.RData   # posterior predictive distribution draws
+    index_pattern: X        # character to replace with sample indices
+  prior_predictions:
+    file: samples_X.RData   # prior predictive distribution draws
     index_pattern: X        # character to replace with sample indices
