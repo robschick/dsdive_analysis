@@ -50,6 +50,12 @@ install.packages(pkgs[!installed])
 
 # Steps for principal analyses
 
+## Model illustration
+
+  1. Run `scripts/example_dives.R` to build a plot that compares a few
+     dives simulated from the prior distribution, but with differing model
+     parameters.
+
 ## Simulation study
 
   1. Run `scripts/sim_gen.R` to generate simulation data.
