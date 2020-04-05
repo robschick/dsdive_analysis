@@ -53,12 +53,14 @@ install.packages(pkgs[!installed])
 ## Simulation study
 
   1. Run `scripts/sim_gen.R` to generate simulation data.
+
   2. Run `scripts/fit.R` to estimate model parameters for each simulation
      dataset.
      - `fit.R` is designed to use a configuration script to load a single
        dataset, specify prior distributions, and other sampler/output
        settings.  The configuration can be passed in as a command-line
-       argument, or as the list variable `groups` in an interactive `R`
+       argument (see command line calls in `job/dothesimulation.job` for
+       examples), or as the list variable `groups` in an interactive `R`
        session.  The simulations should use the configuration below, where
        `XXX` is replaced with the simulation dataset names
        `sim_tyack_more_known_end_30`, `sim_tyack_more_known_end_60`, and
@@ -74,6 +76,7 @@ install.packages(pkgs[!installed])
      validation= 'no_validation'
      )
      ```
+
   3. After fitting all models, run `scripts/figures/parameter_recovery.R` to
      generate output figures for the simulation study.
 
@@ -85,24 +88,36 @@ install.packages(pkgs[!installed])
      and a second time to create a validation partition and fit the model to
      the partition.
 
-  ```r
-  groups = list(
-    data = 'zc84_800',
-    observation_model = 'uniform_systematic',
-    priors = 'tyack_priors',
-    sampler = 'prod',
-    subset = 'all_dives',
-    validation= 'no_validation'
-  )
-  ```
+     ```r
+     # full-data run
+     groups = list(
+       data = 'zc84_800',
+       observation_model = 'uniform_systematic',
+       priors = 'tyack_priors',
+       sampler = 'prod',
+       subset = 'all_dives',
+       validation= 'no_validation'
+     )
+     ```
 
-  ```r
-  groups = list(
-    data = 'zc84_800',
-    observation_model = 'uniform_systematic',
-    priors = 'tyack_priors',
-    sampler = 'prod',
-    subset = 'all_dives',
-    validation= 'holdout_half'
-  )
-  ```
+     ```r
+     # validation run
+     groups = list(
+       data = 'zc84_800',
+       observation_model = 'uniform_systematic',
+       priors = 'tyack_priors',
+       sampler = 'prod',
+       subset = 'all_dives',
+       validation= 'holdout_half'
+     )
+     ```
+
+  2. For each configuration above, run `scripts/prior_predictions.R` and
+     `scripts/posterior_predictions.R` to draw samples from the prior and
+     posterior predictive distributions, respectively.
+
+  3. For the validation configuration, run `scripts/validation.R` to generate
+     model validation figures and output.
+
+  4. For the full-data configuration, run `scripts/posteriors.R` to generate
+     figures and output that summarize the posterior distributions.
