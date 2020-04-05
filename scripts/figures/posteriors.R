@@ -30,14 +30,14 @@ if(length(args)>0) {
 }
 rm(args,i)
 
-groups = list(
-  data = 'zc84_800',
-  observation_model = 'uniform_systematic',
-  priors = 'tyack_priors',
-  sampler = 'prod',
-  subset = 'all_dives',
-  validation= 'no_validation'
-)
+# groups = list(
+#   data = 'zc84_800',
+#   observation_model = 'uniform_systematic',
+#   priors = 'tyack_priors',
+#   sampler = 'prod',
+#   subset = 'all_dives',
+#   validation= 'no_validation'
+# )
 
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
