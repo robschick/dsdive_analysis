@@ -53,15 +53,15 @@ install.packages(pkgs[!installed])
 
   1. Run `scripts/sim_gen.R` to generate simulation data.
   2. Run `scripts/fit.R` to estimate model parameters for each simulation
-     datasets.
-      a. `fit.R` is designed to use a configuration script to load a single
-         dataset, specify prior distributions, and other sampler/output
-         settings.  The configuration can be passed in as a command-line
-         argument, or as the list variable `groups` in an interactive `R`
-         session.  The simulations should use the configuration below, where
-         `XXX` is replaced with the simulation dataset names
-         `sim_tyack_more_known_end_30`, `sim_tyack_more_known_end_60`, and
-         `sim_tyack_more_known_end_300`.
+     dataset.
+     - `fit.R` is designed to use a configuration script to load a single
+       dataset, specify prior distributions, and other sampler/output
+       settings.  The configuration can be passed in as a command-line
+       argument, or as the list variable `groups` in an interactive `R`
+       session.  The simulations should use the configuration below, where
+       `XXX` is replaced with the simulation dataset names
+       `sim_tyack_more_known_end_30`, `sim_tyack_more_known_end_60`, and
+       `sim_tyack_more_known_end_300`.
 
 ```r
 groups = list(
