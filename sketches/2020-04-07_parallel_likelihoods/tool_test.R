@@ -1,4 +1,23 @@
 # demonstrating use of Rdsm package for distributed likelihood computation
+#
+# Note that we use shared memory to aggregate the likelihood components, but the 
+# shared memory approach is only marginally faster than simply distributing the 
+# likelihood calculation across the cluster using standard R parallel methods.
+#
+# Shared memory systems, then, may be more useful for problems where the 
+# parallel components are tightly-coupled within the parallel call.
+#  
+# we may still want to use Rdsm to enable parallelization in our workflow 
+# because forking is the only other shared-memory tool available to us, and 
+# there may be instances where the increased memory overhead of forking is 
+# undesirable.  the Rdsm tool additionally allows us to potentially use lock 
+# and barrier operations to implement the entire gibbs sampler update with a 
+# single call to clusterEvalQ.  
+#
+# we may also prefer to use Rdsm because the idea behind forking on R is that 
+# the nodes have a read-only copy of the main memory, whereas we need to modify 
+# memory when we update the random effects in parallel.  However, forking is 
+# sufficient for evaluating likelihoods in parallel.
 
 library(parallel)
 library(Rdsm)
@@ -25,7 +44,7 @@ mgrinit(cls = cl, boost = TRUE, barrback = FALSE)
 mgrmakevar(cls = cl, varname = 'll.contrib', nr = 1, nc = length(cl), 
            vartype = 'double', savedesc = FALSE)
 
-# distribute data across cluster (not strictly with FORK)
+# distribute data across cluster (not strictly necessary with FORK)
 clusterExport(cl, c('x', 'n'))
 
 # pre-compute the indices that each node will compute the likelihood for
