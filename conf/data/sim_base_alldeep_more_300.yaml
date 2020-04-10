@@ -1,9 +1,0 @@
-data:
-  name: sim_base_alldeep_more_300
-  path: data/sim/base_alldeep_more/observations_300
-  tstep: 300.0
-  file_patterns:
-    dive: dive
-    depths: depths
-  description: Observations of simulated dives.  Dives are observed every 300 seconds.  Complete
-    dives are stored in ../truth.
