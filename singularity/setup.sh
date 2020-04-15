@@ -41,6 +41,8 @@ singularity exec rmovement.sif install2.r -l libs snow
 singularity exec rmovement.sif install2.r -l libs pracma
 singularity exec rmovement.sif install2.r -l libs yaml
 singularity exec rmovement.sif install2.r -l libs expm
+singularity exec rmovement.sif install2.r -l libs bigmemory
+singularity exec rmovement.sif install2.r -l libs Rdsm
 singularity exec rmovement.sif install2.r -l libs -r NULL ./composr
 singularity exec rmovement.sif install2.r -l libs -r NULL ./dsdive
 
