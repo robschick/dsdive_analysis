@@ -37,7 +37,7 @@ fi
 echo Installing packages into singularity image...
 
 singularity exec rmovement.sif install2.r -l libs Rmpi
-singularity exec rmovement.sif install2.r -l libs snow
+singularity exec rmovement.sif install2.r -l libs -r NULL ./snow_custom_error_dump
 singularity exec rmovement.sif install2.r -l libs pracma
 singularity exec rmovement.sif install2.r -l libs yaml
 singularity exec rmovement.sif install2.r -l libs expm

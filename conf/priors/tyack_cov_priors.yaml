@@ -1,20 +1,25 @@
 sampler:
   name: tyack_cov_priors
   log_descent_speed: # parameterization for gamma prior on lambda1 (m/s)
-    mu: [0.40, 0]
-    sd: [0.07, 1]
+    mu: [0.40, 0, 0, 0]
+    sd: [1, 3, 3, 3]
+    formula: ~ 1 + duration + sd_depth + day_night
   log_forage_speed: # parameterization for gamma prior on lambda2 (m/s)
-    mu: [-1.43, 0]
-    sd: [1.03, 1]
+    mu: [-1.43, 0, 0, 0]
+    sd: [3, 3, 3, 3]
+    formula: ~ 1 + duration + sd_depth + day_night
   log_ascent_speed: # parameterization for gamma prior on lambda3 (m/s)
-    mu: [-0.40, 0]
-    sd: [0.29, 1]
+    mu: [-0.40, 0, 0, 0]
+    sd: [1, 3, 3, 3]
+    formula: ~ 1 + duration + sd_depth + day_night
   logit_descent_preference: # parameterization for beta prior on pi1
-    mu: [2.20, 0]
-    sd: [.75, 1]
+    mu: [2.20, 0, 0, 0]
+    sd: [3, 3, 3, 3]
+    formula: ~ 1 + duration + sd_depth + day_night
   logit_ascent_preference:
-    mu: [-2.20, 0]
-    sd: [.75, 1]
+    mu: [-2.20, 0, 0, 0]
+    sd: [3, 3, 3, 3]
+    formula: ~ 1 + duration + sd_depth + day_night
   stage1_tx: empirical
   stage2_tx: empirical
   description: Use the 85% rule to estimate prior parameters for stage

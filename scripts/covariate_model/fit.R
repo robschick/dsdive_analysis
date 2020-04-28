@@ -53,14 +53,14 @@ if(length(args)>0) {
 }
 rm(args,i)
 
-groups = list(
-  data = 'zc84_800_covariates',
-  observation_model = 'uniform_systematic',
-  priors = 'tyack_cov_priors',
-  sampler = 'prod',
-  subset = 'all_dives',
-  validation= 'holdout_half'
-)
+# groups = list(
+#   data = 'zc84_800_covariates',
+#   observation_model = 'uniform_systematic',
+#   priors = 'tyack_cov_priors',
+#   sampler = 'prod',
+#   subset = 'all_dives',
+#   validation= 'holdout_half'
+# )
 
 # groups = list(
 #   data = 'sim_tyack_more_known_end_30',
@@ -163,8 +163,19 @@ if(cfg$sampler$restart) {
 
 
 #
-# Specify priors
+# Specify priors and extract formulas
 #
+
+pi.formula = list(
+  formula(cfg$priors$logit_descent_preference$formula),
+  formula(cfg$priors$logit_ascent_preference$formula)
+)
+
+lambda.formula = list(
+  formula(cfg$priors$log_descent_speed$formula),
+  formula(cfg$priors$log_forage_speed$formula),
+  formula(cfg$priors$log_ascent_speed$formula)
+)
 
 beta.priors = list(
   list(mu = as.numeric(cfg$priors$logit_descent_preference$mu),
@@ -264,7 +275,7 @@ fit = dsdive.gibbs.obs.cov(
   t0.prior.params = unlist(cfg$observation_model$parameters),
   tf.prior.params = unlist(cfg$observation_model$parameters_tf), 
   offsets = offsets, offsets.tf = offsets.tf, covs = dives.obs$covariates, 
-  pi.formula = ~duration, lambda.formula = ~duration,
+  pi.formula = pi.formula, lambda.formula = lambda.formula,
   warmup = as.numeric(cfg$sampler$warmup), cl = cl)
 
 options(error = NULL)
@@ -274,3 +285,6 @@ if(exists('fit')) {
 }
 
 stopCluster(cl)
+
+# clear shared memory artifacts
+file.remove(dir(pattern = '.desc'))
