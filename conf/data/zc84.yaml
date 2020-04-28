@@ -5,6 +5,7 @@ data:
   file_patterns:
     dive: dive
     depths: depths
+    covariates: NULL
   description: |
     Deep dives (dives over 1,000m) from zc84.  Dives are stored in separate
     files, but observations are timestamped so that the dataset could support

@@ -1,11 +1,11 @@
 data:
-  name: zc84_800
+  name: zc84_800_covariates
   path: data/zc84_800
   tstep: 300.0
   file_patterns:
     dive: dive
     depths: depths
-    covariates: NULL
+    covariates: covariates.rds
   description: Deep dives (dives over 800m) from zc84.  Dives are additionally filtered
     such that they begin and end in a surface bin.  Dives are stored in separate files,
     but observations are timestamped so that the dataset could support sequential
