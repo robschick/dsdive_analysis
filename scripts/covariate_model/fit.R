@@ -23,6 +23,7 @@ if(is.null(cl)) {
   cl = makeCluster(spec = detectCores() - 1, type = 'SOCK')
 }
 
+
 # get cluster size
 nodes = length(cl)
 
@@ -53,7 +54,7 @@ if(length(args)>0) {
 rm(args,i)
 
 groups = list(
-  data = 'zc84_800',
+  data = 'zc84_800_covariates',
   observation_model = 'uniform_systematic',
   priors = 'tyack_cov_priors',
   sampler = 'prod',
@@ -91,16 +92,16 @@ source(file.path('scripts', 'utils', '85pct_rule.R'))
 
 dives.obs = dives.load(path = cfg$data$path, 
                        dive_pattern = cfg$data$file_patterns$dive,
-                       depth_pattern = cfg$data$file_patterns$depths)
+                       depth_pattern = cfg$data$file_patterns$depths, 
+                       covariates = cfg$data$file_patterns$covariates)
 
-covariates = data.frame(x = rep(1, length(dives.obs)))
-  
+
 #
 # extract lists
 #
 
-depth.bins = dives.obs[[1]]$depth.bins
-dives.obs.list = lapply(dives.obs, function(d) d$dive)
+depth.bins = dives.obs$dives[[1]]$depth.bins
+dives.obs.list = lapply(dives.obs$dives, function(d) d$dive)
 
 t.stages.list = lapply(dives.obs.list, function(d) {
   seq(from = d$times[1], to = d$times[length(d$times)], length.out = 4)[2:3]
@@ -111,7 +112,7 @@ t.stages.list = lapply(dives.obs.list, function(d) {
 # select dives for fitting
 #
 
-fit.inds = fit.ind.fn(dives.obs = dives.obs, 
+fit.inds = fit.ind.fn(dives.obs = dives.obs$dives, 
                       duration_min = cfg$subset$duration_min, 
                       duration_max = cfg$subset$duration_max, 
                       holdout = cfg$validation$holdout, 
@@ -144,8 +145,15 @@ if(cfg$sampler$restart) {
   # state.bak = state
 } else {
   params = list(
-    beta = list(qlogis(.95), qlogis(.05)),
-    alpha = list(log(1.25), log(.3), log(.5))
+    beta = list(
+      as.numeric(cfg$priors$logit_descent_preference$mu),
+      as.numeric(cfg$priors$logit_ascent_preference$mu)
+    ),
+    alpha = list(
+      as.numeric(cfg$priors$log_descent_speed$mu),
+      as.numeric(cfg$priors$log_forage_speed$mu),
+      as.numeric(cfg$priors$log_ascent_speed$mu)
+    )
   )
   t.stages = t.stages.list[fit.inds$fit]
   n = length(t.stages)
@@ -159,17 +167,22 @@ if(cfg$sampler$restart) {
 #
 
 beta.priors = list(
-  cfg$priors$logit_descent_preference,
-  cfg$priors$logit_ascent_preference
+  list(mu = as.numeric(cfg$priors$logit_descent_preference$mu),
+       sd = as.numeric(cfg$priors$logit_descent_preference$sd)),
+  list(mu = as.numeric(cfg$priors$logit_ascent_preference$mu),
+       sd = as.numeric(cfg$priors$logit_ascent_preference$sd))
 )
 
 alpha.priors = list(
-  cfg$priors$log_descent_speed,
-  cfg$priors$log_forage_speed,
-  cfg$priors$log_ascent_speed
+  list(mu = as.numeric(cfg$priors$log_descent_speed$mu),
+       sd = as.numeric(cfg$priors$log_descent_speed$sd)),
+  list(mu = as.numeric(cfg$priors$log_forage_speed$mu),
+       sd = as.numeric(cfg$priors$log_forage_speed$sd)),
+  list(mu = as.numeric(cfg$priors$log_ascent_speed$mu),
+       sd = as.numeric(cfg$priors$log_ascent_speed$sd))
 )
 
-times.stages.est = times.stages(dives.obs = dives.obs[fit.inds$fit])
+times.stages.est = times.stages(dives.obs = dives.obs$dives[fit.inds$fit])
 
 if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
   # load stage transition time priors for simulations from disk
@@ -250,8 +263,8 @@ fit = dsdive.gibbs.obs.cov(
   T2.prior.params = T2.prior.params, max.width = 100, max.width.offset = 60, 
   t0.prior.params = unlist(cfg$observation_model$parameters),
   tf.prior.params = unlist(cfg$observation_model$parameters_tf), 
-  offsets = offsets, offsets.tf = offsets.tf, covs = covariates, 
-  pi.formula = ~x-1, lambda.formula = ~x-1,
+  offsets = offsets, offsets.tf = offsets.tf, covs = dives.obs$covariates, 
+  pi.formula = ~duration, lambda.formula = ~duration,
   warmup = as.numeric(cfg$sampler$warmup), cl = cl)
 
 options(error = NULL)

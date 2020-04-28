@@ -1,5 +1,5 @@
 # load data from paths
-dives.load = function(path, dive_pattern, depth_pattern) {
+dives.load = function(path, dive_pattern, depth_pattern, covariates = NULL) {
   
   # identify dive files
   dives = dir(path = path, pattern = dive_pattern, full.names = TRUE)
@@ -28,7 +28,35 @@ dives.load = function(path, dive_pattern, depth_pattern) {
     
   }
   
-  dives.obs
+  res = dives.obs
+  
+  if(!is.null(covariates)) {
+    # load covariates
+    covs = readRDS(file.path(path, covariates))
+    # remove dives that don't correspond to things we will analyze
+    covs = covs[!is.na(covs$josh_label),]
+    # correct for missing data
+    covs[is.na(covs)] = 0
+    # scale numeric columns
+    numeric.cols = which(sapply(covs, is.double))
+    for(col in numeric.cols) {
+      covs[,col] = scale(as.numeric(covs[,col]))
+    }
+    # identify dives that have covariates
+    dives.with.covs = which(gsub(pattern = '\\..*', replacement = '', 
+                                 x = basename(dives)) %in% 
+                              covs$josh_label)
+    # only keep dives with covariates
+    dives.obs = dives.obs[dives.with.covs]
+    
+    # package results
+    res = list(
+      dives = dives.obs,
+      covariates = covs
+    )
+  }
+  
+  res
 }
 
 
