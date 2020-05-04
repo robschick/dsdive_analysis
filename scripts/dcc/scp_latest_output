@@ -19,6 +19,10 @@ REMOTE_BASE="/hpc/group/gelfandlab/jmh_scratch/analysis/output"
 echo "Sync .Rout files."
 rsync -r jmh182@dcc-slogin.oit.duke.edu:/hpc/group/gelfandlab/jmh_scratch/analysis/*.Rout ./
 
+# sync last.dump files
+echo "Sync last.dump files."
+rsync -r jmh182@dcc-slogin.oit.duke.edu:/hpc/group/gelfandlab/jmh_scratch/analysis/last.dump* ./
+
 # load timestamp of last scrape; create SCRAPE_FILE if it does not exist
 SCRAPE_FILE="scrape_dates.txt"
 if [ ! -f "$SCRAPE_FILE" ]; then
