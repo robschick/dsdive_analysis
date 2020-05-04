@@ -20,7 +20,7 @@ rm(list = ls())
 # get or create cluster
 cl = getMPIcluster()
 if(is.null(cl)) {
-  cl = makeCluster(spec = detectCores() - 1, type = 'SOCK')
+  cl = makeCluster(spec = detectCores(), type = 'SOCK')
 }
 
 

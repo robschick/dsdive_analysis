@@ -12,10 +12,12 @@
 CFGSTRING="--args groups=list(\
 data=\"zc84_800_covariates\",\
 observation_model=\"uniform_systematic\",\
-priors=\"tyack_cov_priors\",\
+priors=\"tyack_cov_priors2\",\
 sampler=\"prod\",\
 subset=\"all_dives\",\
 validation=\"holdout_half\")"
+
+echo "Nodes used: $SLURM_JOB_NODELIST"
 
 date
 START=`date +%s`
