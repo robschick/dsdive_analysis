@@ -1,5 +1,5 @@
 sampler:
-  name: tyack_cov_priors
+  name: tyack_cov_priors2
   log_descent_speed: # parameterization for gamma prior on lambda1 (m/s)
     mu: [0.40, 0, 0, 0]
     sd: [1.5, 1.5, 1.5, 1.5]
