@@ -1,0 +1,28 @@
+sampler:
+  name: tyack_cov_duration_priors
+  log_descent_speed: # parameterization for gamma prior on lambda1 (m/s)
+    mu: [0.40, 0]
+    sd: [1.5, 1.5]
+    formula: ~ 1 + duration
+  log_forage_speed: # parameterization for gamma prior on lambda2 (m/s)
+    mu: [-1.43, 0]
+    sd: [1.5, 1.5]
+    formula: ~ 1 + duration
+  log_ascent_speed: # parameterization for gamma prior on lambda3 (m/s)
+    mu: [-0.40, 0]
+    sd: [1.5, 1.5]
+    formula: ~ 1 + duration
+  logit_descent_preference: # parameterization for beta prior on pi1
+    mu: [2.20, 0]
+    sd: [1.5, 1.5]
+    formula: ~ 1 + duration
+  logit_ascent_preference:
+    mu: [-2.20, 0]
+    sd: [1.5, 1.5]
+    formula: ~ 1 + duration
+  stage1_tx: empirical
+  stage2_tx: empirical
+  description: Use the 85% rule to estimate prior parameters for stage
+    transition times from data.  Set priors for descent and ascent intercepts
+    from Tyack (2006), Table 2, and infer prior for forage speed from same
+    paper.  Set vague priors for all other covariates.
