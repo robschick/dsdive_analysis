@@ -1,0 +1,30 @@
+#!/bin/sh
+
+#SBATCH --job-name surfactivity_tyack
+#SBATCH --partition common
+#SBATCH --account gelfandlab
+#SBATCH --mail-type ALL
+#SBATCH --mail-user joshua.hewitt@duke.edu
+#SBATCH --ntasks 6
+#SBATCH --ntasks-per-node 6
+#SBATCH --time 96:00:00
+
+CFGSTRING="--args groups=list(\
+data=\"zc84_800_covariates\",\
+observation_model=\"uniform_systematic\",\
+priors=\"tyack_cov_surfactivity_priors\",\
+sampler=\"prod\",\
+subset=\"all_dives\",\
+validation=\"holdout_half\")"
+
+echo "Nodes used: $SLURM_JOB_NODELIST"
+
+date
+START=`date +%s`
+singularity exec singularity/rmovement.sif R --no-save --no-restore CMD BATCH \
+  "${CFGSTRING}" "scripts/covariate_model/fit.R" fit_${SLURM_JOB_NAME}.Rout
+END=`date +%s`
+date
+
+ELAPSED=$(( $END - $START ))
+echo "Elapsed time (hrs): $(echo "scale=10; $ELAPSED/3600" | bc)"
