@@ -276,7 +276,8 @@ fit = dsdive.gibbs.obs.cov(
   tf.prior.params = unlist(cfg$observation_model$parameters_tf), 
   offsets = offsets, offsets.tf = offsets.tf, covs = dives.obs$covariates, 
   pi.formula = pi.formula, lambda.formula = lambda.formula,
-  warmup = as.numeric(cfg$sampler$warmup), cl = cl, gapprox = TRUE)
+  warmup = as.numeric(cfg$sampler$warmup), cl = cl, gapprox = NULL, 
+  adaptive = TRUE, adaptation.frequency = 20)
 
 options(error = NULL)
 
