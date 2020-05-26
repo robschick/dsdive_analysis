@@ -122,8 +122,8 @@ install.packages(pkgs[!installed])
      `scripts/posterior_predictions.R` to draw samples from the prior and
      posterior predictive distributions, respectively.
 
-  3. For the validation configuration, run `scripts/validation.R` to generate
-     model validation figures and output.
+  3. For the validation configuration, run `scripts/figures/validation.R` to
+     generate model validation figures and output.
 
-  4. For the full-data configuration, run `scripts/posteriors.R` to generate
-     figures and output that summarize the posterior distributions.
+  4. For the full-data configuration, run `scripts/figures/posteriors.R` to
+     generate figures and output that summarize the posterior distributions.
