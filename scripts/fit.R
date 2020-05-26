@@ -182,35 +182,6 @@ if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
   
  }
 
-# beta.summary = function(a,b) {
-#   c(mean = a/(a+b),
-#     sd = sqrt(a*b/(a+b)^2/(a+b+1)))
-# }
-# 
-# beta.summary(a = pi1.prior[1], b = pi1.prior[2])
-# beta.summary(a = pi2.prior[1], b = pi2.prior[2])
-#
-# # plot priors
-# curve(dbeta(x = x, shape1 = pi1.prior[1], shape2 = pi1.prior[2]),
-#       xlab = expression(pi[1]), ylab = expression(f(pi[1])))
-# curve(dbeta(x = x, shape1 = pi2.prior[1], shape2 = pi2.prior[2]),
-#       xlab = expression(pi[2]), ylab = expression(f(pi[2])))
-# curve(dgamma(x = x, shape = lambda1.prior[1], rate = lambda1.prior[2]), 
-#       xlab = expression(lambda[1]), ylab = expression(f(lambda[1])), 
-#       from = 0, to = 4)
-# curve(dgamma(x = x, shape = lambda2.prior[1], rate = lambda2.prior[2]), 
-#       xlab = expression(lambda[2]), ylab = expression(f(lambda[2])), 
-#       from = 0, to = 1)
-# curve(dgamma(x = x, shape = lambda3.prior[1], rate = lambda3.prior[2]), 
-#       xlab = expression(lambda[3]), ylab = expression(f(lambda[3])), 
-#       from = 0, to = 2)
-# curve(dgamma(x = x, shape = T1.prior$estimate[1], rate = T1.prior$estimate[2]),
-#       xlab = expression(T^(1)~~(min.)), ylab = expression(f(T^(1))),
-#       from = 0, to = 25)
-# curve(dgamma(x = x, shape = T2.prior$estimate[1], rate = T2.prior$estimate[2]),
-#       xlab = expression(T^(2)~~(min.)), ylab = expression(f(T^(2))),
-#       from = 0, to = 60)
-
 
 #
 # gibbs sample
