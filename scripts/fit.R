@@ -230,7 +230,7 @@ fit = dsdive.gibbs.obs(
   t0.prior.params = unlist(cfg$observation_model$parameters),
   tf.prior.params = unlist(cfg$observation_model$parameters_tf), 
   offsets = offsets, offsets.tf = offsets.tf, 
-  warmup = as.numeric(cfg$sampler$warmup), cl = NULL)
+  warmup = as.numeric(cfg$sampler$warmup), cl = NULL, delta = 1e-10)
 
 options(error = NULL)
 
