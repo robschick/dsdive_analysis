@@ -34,8 +34,7 @@ parallel::clusterSetRNGStream(cl, NULL)
 clusterEvalQ(cl, library(dsdive, lib.loc = c('singularity/libs', .libPaths())))
 clusterEvalQ(cl, library(Rdsm, lib.loc = c('singularity/libs', .libPaths())))
 
-# Rdsm-initialize cluster
-mgrinit(cl)
+base.dir = getwd()
 
 
 #
@@ -84,6 +83,11 @@ dir.create(out.dir, recursive = TRUE)
 # load data and utility functions
 source(file.path('scripts', 'utils', 'datafns.R'))
 source(file.path('scripts', 'utils', '85pct_rule.R'))
+
+# Rdsm-initialize cluster
+setwd(out.dir)
+mgrinit(cl)
+setwd(base.dir)
 
 
 #
@@ -255,10 +259,12 @@ dump.state = function(state) {
 
 # Save crash info to file last.dump.rda
 dump_on_error <- function() {
-  dump.frames(dumpto = file.path(out.dir, 'last.dump'), to.file = TRUE, 
+  dump.frames(dumpto = file.path('last.dump'), to.file = TRUE, 
               include.GlobalEnv = TRUE)
 }
 options(error = dump_on_error)
+
+setwd(out.dir)
 
 fit = dsdive.gibbs.obs.cov(
   dsobs.list = dives.obs.list[fit.inds$fit], 
@@ -278,6 +284,8 @@ fit = dsdive.gibbs.obs.cov(
   pi.formula = pi.formula, lambda.formula = lambda.formula,
   warmup = as.numeric(cfg$sampler$warmup), cl = cl, gapprox = NULL, 
   adaptive = TRUE, adaptation.frequency = 20)
+
+setwd(base.dir)
 
 options(error = NULL)
 
