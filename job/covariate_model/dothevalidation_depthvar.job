@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name duration_tyack_validation
+#SBATCH --job-name depthvar_tyack_validation
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL
@@ -12,7 +12,7 @@
 CFGSTRING="--args groups=list(\
 data=\"zc84_800_covariates\",\
 observation_model=\"uniform_systematic\",\
-priors=\"tyack_cov_duration_priors\",\
+priors=\"tyack_cov_daynight_priors\",\
 sampler=\"prod\",\
 subset=\"all_dives\",\
 validation=\"holdout_half\")"

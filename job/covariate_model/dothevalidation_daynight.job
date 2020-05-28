@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name daynight_tyack
+#SBATCH --job-name daynight_tyack_validation
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL

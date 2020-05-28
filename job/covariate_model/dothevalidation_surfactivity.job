@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --job-name surfactivity_tyack
+#SBATCH --job-name surfactivity_tyack_validation
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL

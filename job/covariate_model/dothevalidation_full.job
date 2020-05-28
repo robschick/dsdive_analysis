@@ -1,18 +1,18 @@
 #!/bin/sh
 
-#SBATCH --job-name duration_tyack_validation
+#SBATCH --job-name cov2_tyack_validation
 #SBATCH --partition common
 #SBATCH --account gelfandlab
 #SBATCH --mail-type ALL
 #SBATCH --mail-user joshua.hewitt@duke.edu
-#SBATCH --ntasks 6
-#SBATCH --ntasks-per-node 6
+#SBATCH --ntasks 10
+#SBATCH --ntasks-per-node 10
 #SBATCH --time 96:00:00
 
 CFGSTRING="--args groups=list(\
 data=\"zc84_800_covariates\",\
 observation_model=\"uniform_systematic\",\
-priors=\"tyack_cov_duration_priors\",\
+priors=\"tyack_cov_priors2\",\
 sampler=\"prod\",\
 subset=\"all_dives\",\
 validation=\"holdout_half\")"
