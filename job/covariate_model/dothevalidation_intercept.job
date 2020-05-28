@@ -28,7 +28,3 @@ date
 
 ELAPSED=$(( $END - $START ))
 echo "Elapsed time (hrs): $(echo "scale=10; $ELAPSED/3600" | bc)"
-
-
-
-tyack_cov_intercept_priors
