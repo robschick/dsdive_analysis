@@ -91,6 +91,25 @@ shallow.dives = lapply(shallow.periods, function(uw) {
   depth.bins$bin.range[depths$depth.bin[dive.inds]]
 })
 
+# empirical shallow-dive 5-minute transition matrix
+tx.empirical = matrix(colSums(do.call(rbind, lapply(shallow.dives, function(d) {
+  d = as.numeric(d)
+  m = matrix(0, nrow = nrow(depth.bins), ncol = nrow(depth.bins))
+  for(i in 2:length(d)) {
+    d0 = d[i-1]
+    df = d[i]
+    m[d0,df] = m[d0,df] + 1
+  }
+  as.numeric(m)
+}))), nrow = nrow(depth.bins), ncol = nrow(depth.bins))
+
+# row-normalize the probabilities
+tx.empirical = sweep(tx.empirical, 1, rowSums(tx.empirical) + 1e-16, '/')
+
+sink(file.path(o, 'empirical_5min_txprobs.txt'))
+round(tx.empirical, 2)
+sink()
+
 
 #
 # eda fits
