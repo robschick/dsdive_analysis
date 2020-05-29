@@ -254,7 +254,7 @@ dump.state = function(state) {
   }
   
   save.time = date()
-  save(state, save.time, params, file = file.path(out.dir, cfg$base_names$fit))
+  save(state, save.time, params, file = file.path(cfg$base_names$fit))
 }
 
 # Save crash info to file last.dump.rda
