@@ -139,7 +139,7 @@ for(i in 1:consts$N) {
     cfg_mcmc$addSampler(
       target = tgt, 
       type = 'RW', 
-      control = list(scale = as.numeric(sqrt(solve(-o$hessian)))))
+      control = list(scale = as.numeric(sqrt(solve(abs(o$hessian))))))
   }
   
   for(tgt in c(xi1.tgt, xi2.tgt)) {
@@ -153,7 +153,7 @@ for(i in 1:consts$N) {
     cfg_mcmc$addSampler(
       target = tgt, 
       type = 'RW', 
-      control = list(scale = as.numeric(sqrt(solve(-o$hessian)))))
+      control = list(scale = as.numeric(sqrt(solve(abs(o$hessian))))))
   }
 
 }
