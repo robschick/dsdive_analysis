@@ -44,6 +44,7 @@ singularity exec rmovement.sif install2.r -l libs expm
 singularity exec rmovement.sif install2.r -l libs bigmemory
 singularity exec rmovement.sif install2.r -l libs Rdsm
 singularity exec rmovement.sif install2.r -l libs fields
+singularity exec rmovement.sif install2.r -l libs nimble
 singularity exec rmovement.sif install2.r -l libs -r NULL ./composr
 singularity exec rmovement.sif install2.r -l libs -r NULL ./dsdive
 
