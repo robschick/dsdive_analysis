@@ -21,6 +21,7 @@ modelCode = nimbleCode({
   for(i in 1:3) {
     log_lambda[i] ~ dlogGamma(shape = lambda_priors[i,1], 
                               rate = lambda_priors[i,2])
+    
     # transformed parameters, for sampling
     lambda[i] <- exp(log_lambda[i])
   }
@@ -56,7 +57,6 @@ modelCode = nimbleCode({
   
   # loop over dives
   for(i in 1:N) {
-    
     depths[inds[i]:(inds[i+1]-1)] ~ ddive(
       times = times[inds[i]:(inds[i+1]-1)], N = inds[i+1] - inds[i] + 1, 
       expm = expm_decomp[1:3,1:M,1:M],
@@ -68,4 +68,3 @@ modelCode = nimbleCode({
   }
   
 })
-
