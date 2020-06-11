@@ -31,12 +31,7 @@ inits = list(
   xi = as.matrix(times.stages.est * 60),
   T = cbind(0, t(apply(times.stages.est, 1, 
                        function(x) c(x[1], x[1]+x[2]))* 60) , 
-            apply(consts$dive_end_priors, 1, mean))#,
-  # expm = array(0, dim = c(3, consts$M, consts$M)),
-  # evecs = array(0, dim = c(3, consts$M, consts$M)),
-  # evals = matrix(0, nrow = 3, ncol = consts$M),
-  # d = matrix(0, nrow = 3, ncol = consts$M),
-  # dInv = matrix(0, nrow = 3, ncol = consts$M)
+            apply(consts$dive_end_priors, 1, mean))
 )
 
 inits$logit_pi = qlogis(inits$pi)
@@ -56,10 +51,10 @@ cmodel$calculate()
 
 
 #
-#
+# warm start for model parameters; get initial proposal covariances
 #
 
-for(i in 1:1) {
+for(i in 1:nrow(inits$T)) {
   print(i)
   o = optim(par = c(inits$T[i,c(1,4)], inits$xi[i,]), function(u) {
     cmodel[[paste('T[', i, ',1]', sep = '')]] = u[1]
@@ -67,9 +62,26 @@ for(i in 1:1) {
     cmodel[[paste('xi[', i, ',1]', sep = '')]] = u[3]
     cmodel[[paste('xi[', i, ',2]', sep = '')]] = u[4]
     cmodel$calculate()
-  }, control = list(fnscale = -1))
+  }, control = list(fnscale = -1), method = 'BFGS')
   print(o$par)
 }
+
+
+o_init = lapply(c(1,3), function(s) {
+  optim(par = c(0,0), function(theta) {
+    cmodel$logit_pi[s] = theta[1]
+    cmodel$log_lambda[s] = theta[2]
+    cmodel$calculate()
+  }, control = list(fnscale = -1), hessian = TRUE)
+})
+
+o_last = optim(par = 0, function(theta) {
+  cmodel$log_lambda[2] = theta
+  cmodel$calculate()
+}, control = list(fnscale = -1), hessian = TRUE)
+
+cmodel$pi
+cmodel$lambda
 
 
 #
@@ -78,58 +90,21 @@ for(i in 1:1) {
 
 cfg_mcmc = configureMCMC(model)
 
-# find initial covariance matrix for block proposals
-# o = optim(par = c(jjff))
-
-
-for(s in c(1,3)) {
-  o = optim(par = c(0,0), function(theta) {
-    cmodel$logit_pi[s] = theta[1]
-    cmodel$log_lambda[s] = theta[2]
-    cmodel$calculate()
-  }, control = list(fnscale = -1), hessian = FALSE)
-}
-
-cmodel$pi
-cmodel$lambda
-
-library(ggplot2)
-
-for(i in fit.inds$fit) {
-  svec = stagevec(length.out = length(dives.obs.list[[i]]$depths), 
-                  breaks = which(diff(findInterval(dives.obs.list[[i]]$times, 
-                                                   cmodel$T[i,2:3]))==1))
-  print(plot(x = dives.obs.list[[i]], depth.bins = depth.bins, 
-             stages = svec, errorbars = TRUE) + ggtitle(i))
-}
-
-curve(sapply(x, function(x) {
-  cmodel$xi[1,1] = x
-  cmodel$calculate()
-}), from = 0, to = 1200)
-
-
-curve(sapply(x, function(x) {
-  cmodel[['logit_pi[1]']] = logit(x)
-  cmodel$calculate()
-}))
-
-cfg_mcmc$removeSampler(c('logit_pi[1]', 'logit_pi[3]', 
-                         'log_lambda[1]', 'log_lambda[3]',
-                         'xi'))
+cfg_mcmc$removeSampler(c('logit_pi', 'log_lambda'))
 
 cfg_mcmc$addSampler(target = c('logit_pi[1]', 'log_lambda[1]'), 
-                    type = 'RW_block')
+                    type = 'RW_block', 
+                    control = list(propCov = solve(-o_init[[1]]$hessian)))
 
 cfg_mcmc$addSampler(target = c('logit_pi[3]', 'log_lambda[3]'), 
-                    type = 'RW_block')
+                    type = 'RW_block', 
+                    control = list(propCov = solve(-o_init[[2]]$hessian)))
+
+cfg_mcmc$addSampler(target = 'log_lambda[2]',
+                    type = 'RW',
+                    control = list(scale = as.numeric(sqrt(solve(-o_last$hessian)))))
 
 cfg_mcmc$addMonitors(c('pi', 'lambda'))
-
-xi_nodes = model$getNodeNames()[grep('xi.*', model$getNodeNames())]
-for(x in xi_nodes) {
-  cfg_mcmc$addSampler(target = x, type = 'slice')
-}
 
 
 cfg_mcmc
@@ -149,16 +124,15 @@ samples = runMCMC(cmcmc, niter = 1e2)
 library(coda)
 
 plot(mcmc((samples[,'pi[1]'])))
-(mcmc(plogis(samples[(1:50),380:382])))
+plot(mcmc((samples[,'pi[3]'])))
+plot(mcmc((samples[,'lambda[1]'])))
+plot(mcmc((samples[,'lambda[2]'])))
+plot(mcmc((samples[,'lambda[3]'])))
+
+plot(mcmc((samples[,'xi[3, 1]'])))
+plot(mcmc((samples[,'xi[3, 2]'])))
+plot(mcmc((samples[,'T[3, 1]'])))
+plot(mcmc((samples[,'T[3, 4]'])))
 
 
-effectiveSize(mcmc(samples[-(1:50),]))
-
-
-
-model$getDependencies(model$getNodeNames()[264])
-
-samplerFn = cmcmc$samplerFunctions[[96]][[1]]
-samplerFn$memberData(name = 'control')
-
-edit(sampler_RW_block)
+model$getDependencies('pi[1]')

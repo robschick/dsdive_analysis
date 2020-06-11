@@ -357,63 +357,76 @@ ddive = nimbleFunction(
     time_prev <- T[1]
     stage_prev <- 1
     
-    # TODO: finish stage 3, account for tx. from last obs. to the surface!
-
-    # loop over observations
+    # aggregate likelihood until end of dive
     more_observations <- TRUE
-    for(i in 1:N) {
-      # ad-hoc flag to "break" loop
-      if(more_observations == TRUE) {
-        # only process in-sync observations (e.g., during dive window)
-        if(times[i] > time_prev) {
-          
-          # extract current transition: special handling for last observation
-          if(times[i] >= T[4]) {
-            x_loc <- 1
-            time_loc <- T[4]
-            more_observations <- FALSE
-          } else {
-            x_loc <- x[i]
-            time_loc <- times[i]
-          }
-          
-          # determine dive stage
-          if(time_loc >= T[3]) {
-            stage_loc <- 3
-          } else if(time_loc >= T[2]) {
-            stage_loc <- 2
-          } else {
-            stage_loc <- 1
-          }
-          
-          # initialize transition distribution
-          u <- numeric(0, length = M)
-          u[x_prev] <- 1
-          
-          # diffuse transition mass across stages
-          time_stage <- time_prev
-          for(s in stage_prev:stage_loc) {
-            # time spent in stage
-            d_t <- min(T[s+1], time_loc) - time_stage
-            # update time-in-stage counter
-            time_stage <- T[s+1]
-            # diffuse mass across stage s
-            u[1:M] <- expmAtv(expm = expm[s,1:M,1:M], evecs = evecs[s,1:M,1:M], 
-                              evals = evals[s,1:M], d = d[s,1:M], 
-                              dInv = dInv[s,1:M], tstep = tstep, N = M, 
-                              v = u[1:M], t = d_t, preMultiply = TRUE)[1:M]
-          }
-          
-          # aggregate likelihood
-          ll <- ll + log(u[x_loc])
-          
-          # update last state, for computing Markov probabilities
-          x_prev <- x_loc
-          time_prev <- time_loc
-          stage_prev <- stage_loc
-        }
+    i <- 1
+    while(more_observations) {
+      
+      if(i <= N) {
+        # ll contribution from next observation
+        time_next <- times[i]
+        x_next <- x[i]
+        i <- i+1
+      } else {
+        # ll contribution from dive end
+        time_next <- T[4]
+        x_next <- 1
+        more_observations <- FALSE
       }
       
+      # only process in-sync observations (e.g., during dive window)
+      if(time_next > time_prev) {
+        
+        # extract current transition: special handling for last observation
+        if(time_next >= T[4]) {
+          x_loc <- 1
+          time_loc <- T[4]
+          more_observations <- FALSE
+        } else {
+          x_loc <- x_next
+          time_loc <- time_next
+        }
+        
+        # determine dive stage
+        if(time_loc >= T[3]) {
+          stage_loc <- 3
+        } else if(time_loc >= T[2]) {
+          stage_loc <- 2
+        } else {
+          stage_loc <- 1
+        }
+        
+        # initialize transition distribution
+        u <- numeric(0, length = M)
+        u[x_prev] <- 1
+        
+        # diffuse transition mass across stages
+        time_stage <- time_prev
+        for(s in stage_prev:stage_loc) {
+          # time spent in stage
+          d_t <- min(T[s+1], time_loc) - time_stage
+          # update time-in-stage counter
+          time_stage <- T[s+1]
+          # diffuse mass across stage s
+          if(s==stage_prev) {
+            preMultiply <- TRUE
+          } else {
+            preMultiply <- FALSE
+          }
+          u[1:M] <- expmAtv(expm = expm[s,1:M,1:M], evecs = evecs[s,1:M,1:M], 
+                            evals = evals[s,1:M], d = d[s,1:M], 
+                            dInv = dInv[s,1:M], tstep = tstep, N = M, 
+                            v = u[1:M], t = d_t, preMultiply = preMultiply)[1:M]
+        }
+        
+        # aggregate likelihood
+        ll <- ll + log(u[x_loc])
+        
+        # update last state, for computing Markov probabilities
+        x_prev <- x_loc
+        time_prev <- time_loc
+        stage_prev <- stage_loc
+      }
     }
     
     if(log) { return(ll) } else { return(exp(ll)) }
