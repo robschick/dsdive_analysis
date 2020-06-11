@@ -364,7 +364,8 @@ ddive = nimbleFunction(
           if(s==stage_prev) {
             preMultiply <- TRUE
           } else {
-            preMultiply <- FALSE
+            # preMultiply <- FALSE
+            preMultiply <- TRUE
           }
           u[1:M] <- expmAtv(expm = expm[s,1:M,1:M], evecs = evecs[s,1:M,1:M], 
                             evals = evals[s,1:M], d = d[s,1:M], 
