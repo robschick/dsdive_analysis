@@ -7,3 +7,5 @@
 output/
 .Rproj.user
 scrape_dates.txt
+*.o
+*.so
