@@ -29,10 +29,11 @@ modelCode = nimbleCode({
     # transformed parameters, for sampling
     lambda[i] <- exp(log_lambda[i])
   }
-  
+      
   # dive endpoint random effects
   for(i in 1:N_endpoints) {
-    E[i] ~ dunif(E_priors[i,2], E_priors[i,3])
+    logit_E[i] ~ dlogitunif(L = E_priors[i,2], U = E_priors[i,3])
+    E[i] <- ilogit(logit_E[i]) * (E_priors[i,3] - E_priors[i,2]) + E_priors[i,2]
   }
   
   #

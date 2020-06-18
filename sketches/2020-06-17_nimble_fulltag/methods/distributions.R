@@ -244,6 +244,21 @@ buildAndDecomposeGenerator = nimbleFunction(
 # prior densities
 #
 
+# density for logit(Y) where Y ~ Uniform(L,U)
+dlogitunif = nimbleFunction(
+  run = function(x = double(0), L = double(0), U = double(0),
+                 log = logical(0, default = 0)) {
+    
+    returnType(double(0))                 
+                   
+    # uniform distribution is flat, so it turns out we only need to account for 
+    # the transformation
+    res <- x - 2 * log(exp(x) + 1)
+      
+    if(log) { return(res) } else { return(exp(res)) }     
+  }
+)
+
 # density for logit(X) where X ~ Beta(shape1, shape2)
 dlogitBeta = nimbleFunction(
   run = function(x = double(0), shape1 = double(0), shape2 = double(0), 

@@ -8,7 +8,7 @@ cfg_mcmc = configureMCMC(model)
 
 cfg_mcmc$removeSampler(c('logit_pi', 'log_lambda'))
 
-cfg_mcmc$addMonitors(c('pi', 'lambda'))
+cfg_mcmc$addMonitors(c('pi', 'lambda', 'T', 'E'))
 
 
 #
@@ -54,23 +54,39 @@ cfg_mcmc$addSampler(
 
 
 # for(i in 1:consts$N_endpoints) {
-#   e.tgt = paste('E[', i, ']', sep = '')
-#   
-#   o = optim(par = inits$E[i], function(u) {
-#     cmodel[[e.tgt]] = u
-#     cmodel$calculate()
-#   }, control = list(fnscale = -1), method = 'Brent', hessian = TRUE,
-#   lower = consts$E_priors[i,'t_lwr'],
-#   upper = consts$E_priors[i,'t_upr'])
-#   
+# 
+#   e.tgt = paste('logit_E[', i, ']', sep = '')
+# 
 #   cfg_mcmc$addSampler(
 #     target = e.tgt,
-#     type = 'RW',
-#     control = list(scale = as.numeric(sqrt(solve(-o$hessian))))
+#     type = 'RW'
+#     # control = list(adaptInterval = 20, sliceWidth = 1)
 #   )
-#   
+# 
 # }
-
+# 
+# for(i in 1:consts$N_ranges_deep) {
+#   for(j in 1:2) {
+#     xi.tgt = paste('xi[', consts$dive_priors_deep[i,1], ', ', j, ']', sep = '')
+#     cfg_mcmc$addSampler(
+#       target = xi.tgt,
+#       type = 'slice',
+#       control = list(adaptInterval = 20, sliceWidth = 1)
+#     )
+#   }
+# }
+# 
+# for(i in 1:consts$N_ranges_shallow) {
+#   for(j in 1:1) {
+#     xi.tgt = paste('xi[', consts$dive_priors_shallow[i,1], ', ', j, ']', 
+#                    sep = '')
+#     cfg_mcmc$addSampler(
+#       target = xi.tgt,
+#       type = 'slice',
+#       control = list(adaptInterval = 20, sliceWidth = 1)
+#     )
+#   }
+# }
 
 
 
@@ -105,16 +121,12 @@ for(i in 1:ncheckpoints) {
 
 # library(coda)
 # 
-# plot(mcmc((samples[,'pi[1]'])))
-# plot(mcmc((samples[,'pi[3]'])))
-# plot(mcmc((samples[,'lambda[1]'])))
-# plot(mcmc((samples[,'lambda[2]'])))
-# plot(mcmc((samples[,'lambda[3]'])))
+# plot(mcmc((samples[-1,'pi[1]'])))
+# plot(mcmc((samples[-1,'pi[3]'])))
+# plot(mcmc((samples[-1,'lambda[1]'])))
+# plot(mcmc((samples[-1,'lambda[2]'])))
+# plot(mcmc((samples[-1,'lambda[3]'])))
 # 
-# plot(mcmc((samples[,'xi[3, 1]'])))
-# plot(mcmc((samples[,'xi[3, 2]'])))
-# plot(mcmc((samples[,'T[3, 1]'])))
-# plot(mcmc((samples[,'T[3, 4]'])))
+# plot(mcmc((samples[-1,'E[100]'])))
+# plot(mcmc((samples[-1,'xi[483, 2]'])))
 # 
-# 
-# model$getDependencies('pi[1]')

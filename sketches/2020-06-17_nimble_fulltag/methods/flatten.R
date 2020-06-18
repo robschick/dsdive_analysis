@@ -84,6 +84,8 @@ inits = list(
 
 inits$logit_pi = qlogis(inits$pi)
 inits$log_lambda = log(inits$lambda)
+inits$logit_E = qlogis((inits$E - consts$E_priors[,'t_lwr']) / 
+  (consts$E_priors[,'t_upr'] - consts$E_priors[,'t_lwr']))
 
 model = nimbleModel(
   code = modelCode,
@@ -96,4 +98,3 @@ model = nimbleModel(
 cmodel = compileNimble(model, projectName = 'ctdsDives', resetFunctions = TRUE)
 
 cmodel$calculate()
-
