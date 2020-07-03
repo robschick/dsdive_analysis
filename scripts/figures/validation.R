@@ -19,6 +19,8 @@ library(KSgeneral)
 # Set up environment
 #
 
+rm(list = ls())
+
 # read in configuration groups
 args = commandArgs(TRUE)
 if(length(args)>0) {
@@ -39,6 +41,15 @@ rm(args,i)
 #   validation= 'holdout_half'
 # )
 
+groups = list(
+  data = 'zc84_800_covariates',
+  observation_model = 'uniform_systematic',
+  priors = 'tyack_cov_surfactivity_priors',
+  sampler = 'prod',
+  subset = 'all_dives',
+  validation= 'holdout_half'
+)
+
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
 rm(groups)
@@ -47,8 +58,8 @@ rm(groups)
 max_depth = 800
 
 # output paths
-out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name, 
-                    cfg$validation$name, cfg$observation_model$name, 
+out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name,
+                    cfg$validation$name, cfg$observation_model$name,
                     cfg$priors$name)
 
 # load data and utility functions
@@ -60,7 +71,7 @@ source(file.path('scripts', 'utils', '85pct_rule.R'))
 # load data
 #
 
-dives.obs = dives.load(path = cfg$data$path, 
+dives.obs = dives.load(path = cfg$data$path,
                        dive_pattern = cfg$data$file_patterns$dive,
                        depth_pattern = cfg$data$file_patterns$depths)
 
@@ -80,7 +91,7 @@ times.stages.est = times.stages(dives.obs = dives.obs)[fit.inds$validate,]
 # extract information about validation dives
 n.dives = length(dives.obs.list)
 validation.obs = do.call(rbind, lapply(1:n.dives, function(ind) {
-  # extract dive 
+  # extract dive
   d = dives.obs.list[[ind]]
   # extract estimates of stage durations
   stages.dur = times.stages.est[ind,]*60
@@ -98,7 +109,7 @@ validation.obs = do.call(rbind, lapply(1:n.dives, function(ind) {
       n.tx.obs = sum(diff(d$depths) != 0),
       tstep = tstep,
       dur.s1 = as.numeric(stages.dur[1]),
-      dur.s2 = as.numeric(stages.dur[2]), 
+      dur.s2 = as.numeric(stages.dur[2]),
       dur.s3 = as.numeric(stages.dur[3])
     )
   }))
@@ -117,7 +128,7 @@ validation.depthseq = do.call(rbind, lapply(1:n.dives, function(ind) {
 # load posterior predictive samples
 #
 
-postpred.files = dir(file.path(out.dir, cfg$sub_paths$posterior_predictions), 
+postpred.files = dir(file.path(out.dir, cfg$sub_paths$posterior_predictions),
                      pattern = '*.RData', full.names = TRUE)
 postpred.samples = do.call(c, lapply(postpred.files, function(f) {
   load(f)
@@ -132,7 +143,7 @@ postpred.samples = do.call(c, lapply(postpred.files, function(f) {
 # extract information about posterior predictive samples
 n.samples = length(postpred.samples)
 postpred.samples.obs = do.call(rbind, lapply(1:n.samples, function(ind) {
-  # extract dive 
+  # extract dive
   d = postpred.samples[[ind]]
   # loop over all observation times
   do.call(rbind, lapply(tstep.seq, function(tstep) {
@@ -143,7 +154,7 @@ postpred.samples.obs = do.call(rbind, lapply(1:n.samples, function(ind) {
     # shift observation times according to offset
     t.obs = t.obs.reported - d$t0.offset
     # observe dive
-    obs = dsdive.observe(depths = d$depths, times = d$times, 
+    obs = dsdive.observe(depths = d$depths, times = d$times,
                          stages = d$stages, t.obs = t.obs)
     # correct observations for offset
     obs$depths = c(rep(1, sum(t.obs<0)), obs$depths)
@@ -157,7 +168,7 @@ postpred.samples.obs = do.call(rbind, lapply(1:n.samples, function(ind) {
       obs$times = obs$times[-trailing.obs]
     }
     # compute observed stage durations
-    stages.dur = diff(c(0, obs$times[c(FALSE, diff(obs$stages)==1)], 
+    stages.dur = diff(c(0, obs$times[c(FALSE, diff(obs$stages)==1)],
                         obs$times[length(obs$times)]))
     # extract summary features of dives
     data.frame(
@@ -172,7 +183,7 @@ postpred.samples.obs = do.call(rbind, lapply(1:n.samples, function(ind) {
       n.tx.obs = sum(diff(obs$depths) != 0),
       tstep = tstep,
       dur.s1 = stages.dur[1],
-      dur.s2 = stages.dur[2], 
+      dur.s2 = stages.dur[2],
       dur.s3 = stages.dur[3]
     )
   }))
@@ -180,7 +191,7 @@ postpred.samples.obs = do.call(rbind, lapply(1:n.samples, function(ind) {
 
 # compute depth bin distributions over time
 postpred.depthseq = do.call(rbind, lapply(1:n.samples, function(ind) {
-  # extract dive 
+  # extract dive
   d = postpred.samples[[ind]]
   # exact duration of dive
   duration = d$times[length(d$times)]
@@ -189,7 +200,7 @@ postpred.depthseq = do.call(rbind, lapply(1:n.samples, function(ind) {
   # shift observation times according to offset
   t.obs = t.obs.reported - d$t0.offset
   # observe dive
-  obs = dsdive.observe(depths = d$depths, times = d$times, 
+  obs = dsdive.observe(depths = d$depths, times = d$times,
                        stages = d$stages, t.obs = t.obs)
   # correct observations for offset
   obs$depths = c(rep(1, sum(t.obs<0)), obs$depths)
@@ -203,8 +214,8 @@ postpred.depthseq = do.call(rbind, lapply(1:n.samples, function(ind) {
     obs$times = obs$times[-trailing.obs]
   }
   # return tidy data frame with depth bins over time
-  data.frame(sample = ind, 
-             depth = depth.bins$center[obs$depths], 
+  data.frame(sample = ind,
+             depth = depth.bins$center[obs$depths],
              duration.obs = t.obs.reported[length(t.obs.reported)],
              depth.start.obs = obs$depths[1],
              time = obs$times,
@@ -218,52 +229,99 @@ postpred.depthseq = do.call(rbind, lapply(1:n.samples, function(ind) {
 #
 
 ks.gof = function(df, var, verbose = TRUE) {
-  
+
   # extract estimate of posterior predictive distribution
   prob = df %>% filter(series=='Post. Predictive') %>% ungroup()
   prob = prob[order(prob[var] %>% unlist()),]
-  
+
   # extract validation samples
-  obs = df %>% filter(series=='Empirical Validation') %>% ungroup() 
-  
+  obs = df %>% filter(series=='Empirical Validation') %>% ungroup()
+
   # compute support, and merge data; replace missing items with 0
-  df.ks = data.frame(support = sort(unique(c(prob[var] %>% unlist(), 
-                                                obs[var] %>% unlist())))) %>% 
-    left_join(prob %>% select(var, prob), by = c('support' = var)) %>% 
-    left_join(obs %>% select(var, prob), by = c('support' = var)) %>% 
+  df.ks = data.frame(support = sort(unique(c(prob[var] %>% unlist(),
+                                                obs[var] %>% unlist())))) %>%
+    left_join(prob %>% select(var, prob), by = c('support' = var)) %>%
+    left_join(obs %>% select(var, prob), by = c('support' = var)) %>%
     mutate_all(~replace(., which(is.na(.)), 0))
-  
+
   colnames(df.ks)[2:3] = c('prob.posterior', 'prob.observed')
-  
+
   # expand validation samples to raw counts
   samples = rep(obs[var] %>% unlist(), obs$n)
-  
+
   # run ks test
-  res = disc_ks_test(x = samples, 
-                     y = stepfun(x = df.ks$support, 
+  res = disc_ks_test(x = samples,
+                     y = stepfun(x = df.ks$support,
                                  y = c(0,cumsum(df.ks$prob.posterior))),
                      exact = TRUE)
-  
+
   if(verbose) {
 
     cat("==================================\n")
     cat("K-S goodness of fit test\n")
     cat("==================================\n")
-    
+
     cat("\n")
-    
+
     print(c(res$statistic, p=res$p.value))
-    
+
     cat("\n")
-    
+
     print(df.ks)
-    
+
     cat("\n")
-    
+
     print(c(n=length(samples)))
   }
-  
+
   res
+}
+
+
+#
+# integreated mean square error model fit/selection criteria
+#
+
+imse.gof = function(df, var, verbose = TRUE) {
+
+  # extract estimate of posterior predictive distribution
+  prob = df %>% filter(series=='Post. Predictive') %>% ungroup()
+  prob = prob[order(prob[var] %>% unlist()),]
+
+  # extract validation samples
+  obs = df %>% filter(series=='Empirical Validation') %>% ungroup()
+
+  # compute support, and merge data; replace missing items with 0
+  df.ks = data.frame(support = sort(unique(c(prob[var] %>% unlist(),
+                                                obs[var] %>% unlist())))) %>%
+    left_join(prob %>% select(var, prob), by = c('support' = var)) %>%
+    left_join(obs %>% select(var, prob), by = c('support' = var)) %>%
+    mutate_all(~replace(., which(is.na(.)), 0))
+
+  colnames(df.ks)[2:3] = c('prob.posterior', 'prob.observed')
+
+  # expand validation samples to raw counts
+  samples = rep(obs[var] %>% unlist(), obs$n)
+
+  # compute squared differences between CDFs
+  imse = sum((cumsum(df.ks$prob.posterior) - cumsum(df.ks$prob.observed))^2)
+
+  if(verbose) {
+
+    cat("==================================================\n")
+    cat("Integrated mean square error model fit criteria\n")
+    cat("==================================================\n")
+
+    cat("\n")
+
+    print(c(imse = imse))
+
+    cat("\n")
+
+    print(c(n=length(samples)))
+  }
+
+  imse
 }
 
 
@@ -273,37 +331,37 @@ ks.gof = function(df, var, verbose = TRUE) {
 
 chisq.gof = function(df, var, verbose = TRUE, collapse) {
   # Parameters:
-  #  collapse - TRUE to merge cells with expected counts less than 5.  The 
-  #    merging will be done working from the tails toward the center of the 
+  #  collapse - TRUE to merge cells with expected counts less than 5.  The
+  #    merging will be done working from the tails toward the center of the
   #    distribution's support.
-  
+
   # extract estimate of posterior predictive distribution
-  prob = df %>% filter(series=='Post. Predictive') %>% ungroup() 
-  
+  prob = df %>% filter(series=='Post. Predictive') %>% ungroup()
+
   # extract validation samples
-  obs = df %>% filter(series=='Empirical Validation') %>% ungroup() 
-  
+  obs = df %>% filter(series=='Empirical Validation') %>% ungroup()
+
   # compute support, and merge data; replace missing items with 0
-  df.chisq = data.frame(support = sort(unique(c(prob[var] %>% unlist(), 
-                                                obs[var] %>% unlist())))) %>% 
-    left_join(prob %>% select(var, prob), by = c('support' = var)) %>% 
-    left_join(obs %>% select(var, n), by = c('support' = var)) %>% 
+  df.chisq = data.frame(support = sort(unique(c(prob[var] %>% unlist(),
+                                                obs[var] %>% unlist())))) %>%
+    left_join(prob %>% select(var, prob), by = c('support' = var)) %>%
+    left_join(obs %>% select(var, n), by = c('support' = var)) %>%
     mutate_all(~replace(., which(is.na(.)), 0))
-  
+
   colnames(df.chisq)[3] = 'observed'
-  
+
   # collapse low-probability states to ensure at least 5 expected observations
   # per group
   if(collapse) {
-    
+
     # minimum probability required per category
     p.min = 5 / sum(df.chisq$observed)
-    
+
     df.chisq$groups = 0
     n = nrow(df.chisq)
     gp = 1
-    
-    # forward pass 
+
+    # forward pass
     for(i in 1:nrow(df.chisq)) {
       if(df.chisq$groups[i]==0) {
         mass.exceedance = which(cumsum(df.chisq$prob[i:n]) >= p.min)
@@ -314,8 +372,8 @@ chisq.gof = function(df, var, verbose = TRUE, collapse) {
         }
       }
     }
-    
-    # backward pass 
+
+    # backward pass
     for(i in nrow(df.chisq):1) {
       if(df.chisq$groups[i]==0) {
         mass.exceedance = which(cumsum(df.chisq$prob[i:1]) >= p.min)
@@ -331,38 +389,38 @@ chisq.gof = function(df, var, verbose = TRUE, collapse) {
         }
       }
     }
-    
+
     # merge groups
-    df.chisq = df.chisq %>% 
-      group_by(groups) %>% 
-      summarise(support = paste(c(round(min(support)), 
+    df.chisq = df.chisq %>%
+      group_by(groups) %>%
+      summarise(support = paste(c(round(min(support)),
                                   round(max(support))), collapse = '_'),
-                prob = sum(prob), 
-                observed = sum(observed)) %>% 
-      ungroup() %>% 
+                prob = sum(prob),
+                observed = sum(observed)) %>%
+      ungroup() %>%
       select(-groups)
   }
-  
+
   # run chisq test
   res = chisq.test(x = df.chisq$observed, p = df.chisq$prob)
-  
+
   if(verbose) {
     # extract expected counts
     df.chisq$expected = round(res$expected)
-    
+
     cat("==================================\n")
     cat("Chi-squared goodness of fit test\n")
     cat("==================================\n")
-    
+
     cat("\n")
-    
+
     print(c(res$statistic, res$parameter, p=res$p.value))
-    
+
     cat("\n")
-    
+
     print(df.chisq)
   }
-  
+
   res
 }
 
@@ -371,7 +429,7 @@ chisq.gof = function(df, var, verbose = TRUE, collapse) {
 # plots and information
 #
 
-o = file.path(out.dir, cfg$sub_paths$figures, 
+o = file.path(out.dir, cfg$sub_paths$figures,
               cfg$sub_paths$posterior_predictions)
 
 dir.create(o, recursive = TRUE)
@@ -391,54 +449,58 @@ bin_start_max = cfg$subset$bin_start_max
 #
 
 df = rbind(
-  postpred.samples.obs %>% 
+  postpred.samples.obs %>%
     filter(!(sample %in% burn),
            max.depth.obs >= max_depth,
            duration.obs >= min_dur,
            duration.obs <= max_dur,
-           depth.start.obs <= bin_start_max) %>% 
+           depth.start.obs <= bin_start_max) %>%
     mutate(series = 'Post. Predictive',
            total = length(unique(sample)),
-           eps = sqrt(log(2/.05)/(2*total))) %>% 
-    group_by(max.depth.obs, series) %>% 
+           eps = sqrt(log(2/.05)/(2*total))) %>%
+    group_by(max.depth.obs, series) %>%
     summarise(prob = n() / total[1],
               n = n(),
-              eps = eps[1]) %>% 
-    group_by(series) %>% 
+              eps = eps[1]) %>%
+    group_by(series) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1)),
-  validation.obs %>% 
-    mutate(series = 'Empirical Validation', 
+  validation.obs %>%
+    mutate(series = 'Empirical Validation',
            total = length(unique(dive.id)),
-           eps = sqrt(log(2/.05)/(2*total))) %>% 
-    group_by(max.depth.obs, series) %>% 
+           eps = sqrt(log(2/.05)/(2*total))) %>%
+    group_by(max.depth.obs, series) %>%
     summarise(prob = n() / total[1],
               n = n(),
-              eps = eps[1]) %>% 
-    group_by(series) %>% 
+              eps = eps[1]) %>%
+    group_by(series) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1))
 )
 
 pl = ggplot(df, aes(x = max.depth.obs, y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
-                    fill = series, col = series)) + 
-  geom_ribbon(alpha = .05, col = NA) + 
-  geom_point() + 
-  geom_line(lty = 3, alpha = .6) + 
-  scale_color_brewer('Distribution', type = 'qual', palette = 'Dark2') + 
-  scale_fill_brewer('Distribution', type = 'qual', palette = 'Dark2') + 
-  xlab('Max. observed depth (m)') + 
-  ylab('CDF') + 
-  theme_few() + 
+                    fill = series, col = series)) +
+  geom_ribbon(alpha = .05, col = NA) +
+  geom_point() +
+  geom_line(lty = 3, alpha = .6) +
+  scale_color_brewer('Distribution', type = 'qual', palette = 'Dark2') +
+  scale_fill_brewer('Distribution', type = 'qual', palette = 'Dark2') +
+  xlab('Max. observed depth (m)') +
+  ylab('CDF') +
+  theme_few() +
   theme(panel.border = element_blank())
 
-ggsave(pl, filename = file.path(o, 'max_observed_depth_cdf.png'), 
+ggsave(pl, filename = file.path(o, 'max_observed_depth_cdf.png'),
        dpi = 'print')
 
+sink(file.path(o, paste('max_observed_depth_imse.txt')))
+r.imse = imse.gof(df, 'max.depth.obs')
+sink()
+
 sink(file.path(o, paste('max_observed_depth_chisq.txt')))
-r = chisq.gof(df, 'max.depth.obs', collapse = FALSE)
+r = chisq.gof(df, 'max.depth.obs', collapse = TRUE)
 sink()
 
 sink(file.path(o, paste('max_observed_depth_chisq_collapsed.txt')))
@@ -449,14 +511,15 @@ sink(file.path(o, paste('max_observed_depth_ks.txt')))
 r = ks.gof(df, 'max.depth.obs')
 sink()
 
-save(df, r, file = file.path(o, paste('max_observed_depth.RData')))
+save(df, r, r.imse, file = file.path(o, paste('max_observed_depth.RData')))
+
 
 #
 # observed duration distributions
 #
 
 df = rbind(
-  postpred.samples.obs %>% 
+  postpred.samples.obs %>%
     filter(!(sample %in% burn),
            max.depth.obs >= max_depth,
            duration.obs >= min_dur,
@@ -464,42 +527,46 @@ df = rbind(
            depth.start.obs <= bin_start_max) %>%
     mutate(series = 'Post. Predictive',
            total = length(unique(sample)),
-           eps = sqrt(log(2/.05)/(2*total))) %>% 
-    group_by(duration.obs, series) %>% 
+           eps = sqrt(log(2/.05)/(2*total))) %>%
+    group_by(duration.obs, series) %>%
     summarise(prob = n() / total[1],
-              eps = eps[1]) %>% 
-    group_by(series) %>% 
+              eps = eps[1]) %>%
+    group_by(series) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1)),
-  validation.obs %>% 
-    mutate(series = 'Empirical Validation', 
+  validation.obs %>%
+    mutate(series = 'Empirical Validation',
            total = length(unique(dive.id)),
-           eps = sqrt(log(2/.05)/(2*total))) %>% 
-    group_by(duration.obs, series) %>% 
+           eps = sqrt(log(2/.05)/(2*total))) %>%
+    group_by(duration.obs, series) %>%
     summarise(prob = n() / total[1],
               n = n(),
-              eps = eps[1]) %>% 
-    group_by(series) %>% 
+              eps = eps[1]) %>%
+    group_by(series) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1))
 )
 
 pl = ggplot(df, aes(x = duration.obs/60, y = cdf, col = series, fill = series,
-                    ymin = cdf.lwr, ymax = cdf.upr)) + 
-  geom_ribbon(alpha = .05, col = NA) + 
-  geom_point() + 
-  geom_line(lty = 3, alpha = .6) + 
-  scale_color_brewer('Distribution', type = 'qual', palette = 'Dark2') + 
-  scale_fill_brewer('Distribution', type = 'qual', palette = 'Dark2') + 
-  xlab('Observed dive duration (min)') + 
-  ylab('CDF') + 
-  theme_few() + 
+                    ymin = cdf.lwr, ymax = cdf.upr)) +
+  geom_ribbon(alpha = .05, col = NA) +
+  geom_point() +
+  geom_line(lty = 3, alpha = .6) +
+  scale_color_brewer('Distribution', type = 'qual', palette = 'Dark2') +
+  scale_fill_brewer('Distribution', type = 'qual', palette = 'Dark2') +
+  xlab('Observed dive duration (min)') +
+  ylab('CDF') +
+  theme_few() +
   theme(panel.border = element_blank())
 
-ggsave(pl, filename = file.path(o, 'observed_duration_cdf.png'), 
+ggsave(pl, filename = file.path(o, 'observed_duration_cdf.png'),
        dpi = 'print')
+
+sink(file.path(o, paste('observed_duration_imse.txt')))
+r.imse = imse.gof(df, 'duration.obs')
+sink()
 
 sink(file.path(o, paste('observed_duration_chisq.txt')))
 r = chisq.gof(df, 'duration.obs', collapse = FALSE)
@@ -513,7 +580,7 @@ sink(file.path(o, paste('max_observed_duration_ks.txt')))
 r = ks.gof(df, 'duration.obs')
 sink()
 
-save(df, r, file = file.path(o, paste('observed_duration.RData')))
+save(df, r, r.imse, file = file.path(o, paste('observed_duration.RData')))
 
 
 #
@@ -521,54 +588,54 @@ save(df, r, file = file.path(o, paste('observed_duration.RData')))
 #
 
 df = rbind(
-  postpred.depthseq %>% 
+  postpred.depthseq %>%
     filter(!(sample %in% burn),
            max.depth.obs >= max_depth,
            duration.obs >= min_dur,
            duration.obs <= max_dur,
            depth.start.obs <= bin_start_max) %>%
-    group_by(time) %>% 
+    group_by(time) %>%
     mutate(total = length(unique(sample)),
            eps = sqrt(log(2/.05)/(2*total)),
-           Distribution = 'Post. Predictive') %>% 
-    group_by(time, depth, Distribution) %>% 
+           Distribution = 'Post. Predictive') %>%
+    group_by(time, depth, Distribution) %>%
     summarise(prob = n() / total[1],
               n = n(),
               eps = eps[1]) %>%
-    group_by(Distribution, time) %>% 
+    group_by(Distribution, time) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1)),
-  validation.depthseq %>% 
-    group_by(time) %>% 
+  validation.depthseq %>%
+    group_by(time) %>%
     mutate(total = length(unique(dive.id)),
            eps = sqrt(log(2/.05)/(2*total)),
            Distribution = 'Empirical Validation') %>%
-    group_by(time, depth, Distribution) %>% 
+    group_by(time, depth, Distribution) %>%
     summarise(prob = n() / total[1],
               n = n(),
               eps = eps[1]) %>%
-    group_by(Distribution, time) %>% 
+    group_by(Distribution, time) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1))
 )
 
 pl = ggplot(df, aes(x = (depth), y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
-                    fill = Distribution, col = Distribution, 
-                    group = Distribution)) + 
-  geom_ribbon(alpha = .05, col = NA) + 
-  geom_point() + 
-  geom_line(lty = 3, alpha = .6) + 
-  scale_color_brewer(type = 'qual', palette = 'Dark2') + 
+                    fill = Distribution, col = Distribution,
+                    group = Distribution)) +
+  geom_ribbon(alpha = .05, col = NA) +
+  geom_point() +
+  geom_line(lty = 3, alpha = .6) +
+  scale_color_brewer(type = 'qual', palette = 'Dark2') +
   scale_fill_brewer(type = 'qual', palette = 'Dark2') +
-  xlab('Depth (m)') + 
-  ylab('CDF') + 
-  facet_wrap(~factor(time/60)) +  
-                     # labels = paste(unique(time)/60, 'min', sep = ' '))) + 
+  xlab('Depth (m)') +
+  ylab('CDF') +
+  facet_wrap(~factor(time/60)) +
+                     # labels = paste(unique(time)/60, 'min', sep = ' '))) +
   theme_few()
 
-time_labeller = function(labels, multi_line = TRUE) 
+time_labeller = function(labels, multi_line = TRUE)
 {
   labels <- lapply(labels, function(lab) {
     paste('t =', lab, 'min.', sep = ' ')
@@ -581,29 +648,38 @@ time_labeller = function(labels, multi_line = TRUE)
   }
 }
 
-pl.pub = ggplot(df %>% filter(time/60 >= 5, time/60 <= 60), 
+pl.pub = ggplot(df %>% filter(time/60 >= 5, time/60 <= 60),
                 aes(x = (depth), y = cdf, ymin = cdf.lwr, ymax = cdf.upr,
-                    fill = Distribution, col = Distribution, 
-                    group = Distribution)) + 
-  # geom_ribbon(alpha = .1, col = NA) + 
-  geom_point(size = 1) + 
-  geom_line(lty = 1, alpha = .2, lwd = .5) + 
-  scale_color_brewer(type = 'qual', palette = 'Dark2') + 
+                    fill = Distribution, col = Distribution,
+                    group = Distribution)) +
+  # geom_ribbon(alpha = .1, col = NA) +
+  geom_point(size = 1) +
+  geom_line(lty = 1, alpha = .2, lwd = .5) +
+  scale_color_brewer(type = 'qual', palette = 'Dark2') +
   scale_fill_brewer(type = 'qual', palette = 'Dark2') +
-  xlab('Depth (m)') + 
-  ylab(expression(P('\u2113'(t) <= x))) + 
-  facet_wrap(~factor(time/60), labeller = time_labeller) +  
+  xlab('Depth (m)') +
+  ylab(expression(P('\u2113'(t) <= x))) +
+  facet_wrap(~factor(time/60), labeller = time_labeller) +
   theme_few()
 
-ggsave(pl.pub, filename = file.path(o, 'depths_by_time_cdf_pub.png'), 
+ggsave(pl.pub, filename = file.path(o, 'depths_by_time_cdf_pub.png'),
        dpi = 'print', width = 8, height = 6)
 
-ggsave(pl, filename = file.path(o, 'depths_by_time_cdf.png'), 
+ggsave(pl, filename = file.path(o, 'depths_by_time_cdf.png'),
        dpi = 'print', width = 14, height = 14)
+
+sink(file.path(o, paste('depths_by_time_imse.txt')))
+r.imse = lapply(sort(unique(df$time))[-1], function(s) {
+  res = imse.gof(df %>% mutate(series = Distribution) %>%
+                    filter(time==s), 'depth')
+  cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
+  c(s = s, imse = res)
+})
+sink()
 
 sink(file.path(o, paste('depths_by_time_chisq.txt')))
 r = lapply(sort(unique(df$time))[-1], function(s) {
-  res = chisq.gof(df %>% mutate(series = Distribution) %>% 
+  res = chisq.gof(df %>% mutate(series = Distribution) %>%
                     filter(time==s), 'depth', collapse = FALSE)
   cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
   res
@@ -612,7 +688,7 @@ sink()
 
 sink(file.path(o, paste('depths_by_time_chisq_collapsed.txt')))
 r = lapply(sort(unique(df$time))[-1], function(s) {
-  res = chisq.gof(df %>% mutate(series = Distribution) %>% 
+  res = chisq.gof(df %>% mutate(series = Distribution) %>%
                     filter(time==s), 'depth', collapse = TRUE)
   cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
   res
@@ -621,14 +697,14 @@ sink()
 
 sink(file.path(o, paste('depths_by_time_ks.txt')))
 r = lapply(sort(unique(df$time))[-1], function(s) {
-  res = ks.gof(df %>% mutate(series = Distribution) %>% 
+  res = ks.gof(df %>% mutate(series = Distribution) %>%
                  filter(time==s), 'depth')
   cat(paste("\n(t=", s/60, " min. results)\n\n\n", sep=''))
   res
 })
 sink()
 
-save(df, r, file = file.path(o, paste('depths_by_time.RData')))
+save(df, r, r.imse, file = file.path(o, paste('depths_by_time.RData')))
 
 
 #
@@ -636,7 +712,7 @@ save(df, r, file = file.path(o, paste('depths_by_time.RData')))
 #
 
 df = rbind(
-  postpred.samples.obs %>% 
+  postpred.samples.obs %>%
     filter(!(sample %in% burn),
            max.depth.obs >= max_depth,
            duration.obs >= min_dur,
@@ -644,61 +720,71 @@ df = rbind(
            depth.start.obs <= bin_start_max) %>%
     mutate(series = 'Post. Predictive',
            total = length(unique(sample)),
-           eps = sqrt(log(2/.05)/(2*total))) %>% 
-    pivot_longer(cols = starts_with("dur."), 
+           eps = sqrt(log(2/.05)/(2*total))) %>%
+    pivot_longer(cols = starts_with("dur."),
                  names_to = 'stage', values_to = 'stage.duration') %>%
     filter(!is.na(stage.duration)) %>%
-    mutate(stage = fct_recode(stage, 
+    mutate(stage = fct_recode(stage,
                               'Stage 1' = 'dur.s1',
                               'Stage 2' = 'dur.s2',
-                              'Stage 3' = 'dur.s3')) %>% 
-    group_by(stage, stage.duration, series) %>% 
+                              'Stage 3' = 'dur.s3')) %>%
+    group_by(stage, stage.duration, series) %>%
     summarise(prob = n() / total[1],
               n = n(),
-              eps = eps[1]) %>% 
+              eps = eps[1]) %>%
     group_by(stage, series) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1)),
-  validation.obs %>% 
-    mutate(series = 'Empirical Validation', 
+  validation.obs %>%
+    mutate(series = 'Empirical Validation',
            total = length(unique(dive.id)),
-           eps = sqrt(log(2/.05)/(2*total))) %>% 
-    pivot_longer(cols = starts_with("dur."), 
+           eps = sqrt(log(2/.05)/(2*total))) %>%
+    pivot_longer(cols = starts_with("dur."),
                  names_to = 'stage', values_to = 'stage.duration') %>%
-    mutate(stage = fct_recode(stage, 
+    mutate(stage = fct_recode(stage,
                               'Stage 1' = 'dur.s1',
                               'Stage 2' = 'dur.s2',
-                              'Stage 3' = 'dur.s3')) %>% 
-    group_by(stage, stage.duration, series) %>% 
+                              'Stage 3' = 'dur.s3')) %>%
+    group_by(stage, stage.duration, series) %>%
     summarise(prob = n() / total[1],
               n = n(),
-              eps = eps[1]) %>% 
+              eps = eps[1]) %>%
     group_by(stage, series) %>%
     mutate(cdf = cumsum(prob),
            cdf.lwr = pmax(cdf - eps, 0),
            cdf.upr = pmin(cdf + eps, 1))
-) 
+)
 
 
-pl = ggplot(df, aes(x = stage.duration/60, y = cdf, ymin = cdf.lwr, 
-                    ymax = cdf.upr, col = series, fill = series)) + 
-  geom_ribbon(alpha = .05, col = NA) + 
-  geom_point() + 
-  geom_line(lty = 3, alpha = .6) + 
-  scale_color_brewer('Distribution', type = 'qual', palette = 'Dark2') + 
-  scale_fill_brewer('Distribution', type = 'qual', palette = 'Dark2') + 
-  xlab('Observed stage duration (min)') + 
-  facet_wrap(~stage) + 
-  ylab('CDF') + 
-  theme_few() 
+pl = ggplot(df, aes(x = stage.duration/60, y = cdf, ymin = cdf.lwr,
+                    ymax = cdf.upr, col = series, fill = series)) +
+  geom_ribbon(alpha = .05, col = NA) +
+  geom_point() +
+  geom_line(lty = 3, alpha = .6) +
+  scale_color_brewer('Distribution', type = 'qual', palette = 'Dark2') +
+  scale_fill_brewer('Distribution', type = 'qual', palette = 'Dark2') +
+  xlab('Observed stage duration (min)') +
+  facet_wrap(~stage) +
+  ylab('CDF') +
+  theme_few()
 
-ggsave(pl, filename = file.path(o, 'stage_duration_cdfs.png'), 
+ggsave(pl, filename = file.path(o, 'stage_duration_cdfs.png'),
        dpi = 'print', width = 16, height = 8)
+
+sink(file.path(o, paste('stage_duration_imse.txt')))
+r.imse = lapply(levels(df$stage), function(s) {
+  df2 = df %>% filter(stage==s) %>% group_by(series) %>%
+    mutate(prob = prob/sum(prob)) %>% ungroup()
+  res = imse.gof(df2, 'stage.duration')
+  cat(paste("\n(", s," results)\n\n\n", sep=''))
+  c(s = s, imse = res)
+})
+sink()
 
 sink(file.path(o, paste('stage_duration_chisq.txt')))
 r = lapply(levels(df$stage), function(s) {
-  df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
+  df2 = df %>% filter(stage==s) %>% group_by(series) %>%
     mutate(prob = prob/sum(prob)) %>% ungroup()
   res = chisq.gof(df2, 'stage.duration', collapse = FALSE)
   cat(paste("\n(", s," results)\n\n\n", sep=''))
@@ -708,7 +794,7 @@ sink()
 
 sink(file.path(o, paste('stage_duration_chisq_collapsed.txt')))
 r = lapply(levels(df$stage), function(s) {
-  df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
+  df2 = df %>% filter(stage==s) %>% group_by(series) %>%
     mutate(prob = prob/sum(prob)) %>% ungroup()
   res = chisq.gof(df2, 'stage.duration', collapse = TRUE)
   cat(paste("\n(", s," results)\n\n\n", sep=''))
@@ -718,7 +804,7 @@ sink()
 
 sink(file.path(o, paste('stage_duration_ks.txt')))
 r = lapply(levels(df$stage), function(s) {
-  df2 = df %>% filter(stage==s) %>% group_by(series) %>% 
+  df2 = df %>% filter(stage==s) %>% group_by(series) %>%
     mutate(prob = prob/sum(prob)) %>% ungroup()
   res = ks.gof(df2, 'stage.duration')
   cat(paste("\n(", s," results)\n\n\n", sep=''))
@@ -726,5 +812,4 @@ r = lapply(levels(df$stage), function(s) {
 })
 sink()
 
-save(df, r, file = file.path(o, paste('stage_duration.RData')))
-
+save(df, r, r.imse, file = file.path(o, paste('stage_duration.RData')))
