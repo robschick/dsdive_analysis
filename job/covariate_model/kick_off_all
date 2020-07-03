@@ -1,0 +1,13 @@
+sbatch job/covariate_model/dothedata_daynight.job
+sbatch job/covariate_model/dothedata_depthvar.job
+sbatch job/covariate_model/dothedata_duration.job
+sbatch job/covariate_model/dothedata_full.job
+sbatch job/covariate_model/dothedata_intercept.job
+sbatch job/covariate_model/dothedata_surfactivity.job
+
+sbatch job/covariate_model/dothevalidation_daynight.job
+sbatch job/covariate_model/dothevalidation_depthvar.job
+sbatch job/covariate_model/dothevalidation_duration.job
+sbatch job/covariate_model/dothevalidation_full.job
+sbatch job/covariate_model/dothevalidation_intercept.job
+sbatch job/covariate_model/dothevalidation_surfactivity.job
