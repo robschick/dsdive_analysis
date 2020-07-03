@@ -4,7 +4,32 @@ library(yaml, lib.loc = c('singularity/libs', .libPaths()))
 # modeling tools
 library(dsdive, lib.loc = c('singularity/libs', .libPaths()))
 library(MASS)
+# # parallel tools
+# require(Rmpi, lib.loc = c('singularity/libs', .libPaths()))
+# require(snow, lib.loc = c('singularity/libs', .libPaths()))
+
+# clear workspace
 rm(list = ls())
+
+
+#
+# Set up nodes
+#
+
+# # get or create cluster
+# cl = getMPIcluster()
+# if(is.null(cl)) {
+#   cl = makeCluster(spec = parallel::detectCores() - 1, type = 'SOCK')
+# }
+# 
+# # get cluster size
+# nodes = length(cl)
+# 
+# # initialize RNG streams across cluster
+# parallel::clusterSetRNGStream(cl, NULL)
+# 
+# # load analysis package on nodes
+# clusterEvalQ(cl, library(dsdive, lib.loc = c('singularity/libs', .libPaths())))
 
 
 #
@@ -21,6 +46,24 @@ if(length(args)>0) {
   groups = NULL
 }
 rm(args,i)
+
+# groups = list(
+#   data = 'zc84_800',
+#   observation_model = 'uniform_systematic',
+#   priors = 'tyack_priors',
+#   sampler = 'prod',
+#   subset = 'all_dives',
+#   validation= 'holdout_half'
+# )
+
+# groups = list(
+#   data = 'sim_tyack_more_known_end_30',
+#   observation_model = 'exact_systematic',
+#   priors = 'tyack_simulation_priors',
+#   sampler = 'prod_restart',
+#   subset = 'all_dives',
+#   validation= 'no_validation'
+# )
 
 # build configuration
 cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
@@ -237,3 +280,5 @@ options(error = NULL)
 if(exists('fit')) {
   dump.state(state = fit)
 }
+
+# stopCluster(cl)
