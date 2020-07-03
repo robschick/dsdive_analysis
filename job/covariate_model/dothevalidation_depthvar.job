@@ -12,7 +12,7 @@
 CFGSTRING="--args groups=list(\
 data=\"zc84_800_covariates\",\
 observation_model=\"uniform_systematic\",\
-priors=\"tyack_cov_daynight_priors\",\
+priors=\"tyack_cov_depthvar_priors\",\
 sampler=\"prod\",\
 subset=\"all_dives\",\
 validation=\"holdout_half\")"
