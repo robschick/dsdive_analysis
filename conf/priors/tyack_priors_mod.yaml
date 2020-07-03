@@ -1,0 +1,24 @@
+sampler:
+  name: tyack_priors
+  descent_speed: # parameterization for gamma prior on lambda1 (m/s)
+    mu: 1.5
+    sd: .1
+  forage_speed: # parameterization for gamma prior on lambda2 (m/s)
+    mu: .3
+    sd: .15
+  ascent_speed: # parameterization for gamma prior on lambda3 (m/s)
+    mu: .7
+    sd: .2
+  descent_preference: # parameterization for beta prior on pi1
+    mu: .9
+    shape2: 2
+  ascent_preference:
+    mu: .1
+    shape1: 2
+  stage1_tx: empirical
+  stage2_tx: empirical
+  description: Use the 85% rule to estimate prior parameters for stage
+    transition times from data.  Set priors for descent and ascent speeds from
+    Tyack (2006), Table 2, and infer prior for forage speed from same paper.
+    The prior distribution for forage_speed has been selected such that the
+    prior distribution is unimodal with a bounded density at all points.
