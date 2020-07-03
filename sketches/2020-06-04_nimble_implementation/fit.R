@@ -5,55 +5,15 @@ library(yaml, lib.loc = c('singularity/libs', .libPaths()))
 library(dsdive, lib.loc = c('singularity/libs', .libPaths()))
 library(MASS)
 
+
+#
+# set up environment
+#
+
 # clear workspace
 rm(list = ls())
 
-
-#
-# Set up environment
-#
-
-# read in configuration groups
-args = commandArgs(TRUE)
-if(length(args)>0) {
-  for(i in 1:length(args)){
-    eval(parse(text=args[[i]]))
-  }
-} else {
-  groups = NULL
-}
-rm(args,i)
-
-groups = list(
-  data = 'zc84_800',
-  observation_model = 'uniform_systematic',
-  priors = 'tyack_priors',
-  sampler = 'prod',
-  subset = 'all_dives',
-  validation= 'holdout_half'
-)
-
-# groups = list(
-#   data = 'sim_tyack_more_known_end_30',
-#   observation_model = 'exact_systematic',
-#   priors = 'tyack_simulation_priors',
-#   sampler = 'prod_restart',
-#   subset = 'all_dives',
-#   validation= 'no_validation'
-# )
-
-# build configuration
-cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
-rm(groups)
-
-# output paths
-out.dir = file.path(cfg$base_paths$fit, cfg$data$name, cfg$subset$name,
-                    cfg$validation$name, cfg$observation_model$name,
-                    cfg$priors$name)
-dir.create(out.dir, recursive = TRUE)
-
 # load data and utility functions
-source(file.path('scripts', 'utils', 'datafns.R'))
 source(file.path('scripts', 'utils', '85pct_rule.R'))
 
 
@@ -61,67 +21,114 @@ source(file.path('scripts', 'utils', '85pct_rule.R'))
 # load data
 #
 
-dives.obs = dives.load(path = cfg$data$path,
-                       dive_pattern = cfg$data$file_patterns$dive,
-                       depth_pattern = cfg$data$file_patterns$depths)
+groups = list(
+  # data = 'zc84_800',
+  observation_model = 'uniform_systematic',
+  priors = 'tyack_priors',
+  sampler = 'prod',
+  subset = 'all_dives',
+  validation= 'holdout_half'
+)
+
+# build configuration
+cfg = compose_cfg(file = file.path('conf', 'config.yaml'), groups = groups)
+rm(groups)
+
+# dive observations, priors, other data structures, and base-level 
+# inclusion/exclusion from model fitting
+dives.processed = readRDS(file.path('sketches', '2020_06_15-nimble_demo',
+                                    'dives_processed.rds'))
+
+# depth bins
+depth.bins = read.csv(file.path('data', 'depth_template.csv'))
+
 
 #
-# extract lists
+# extract basic information
 #
 
-depth.bins = dives.obs[[1]]$depth.bins
-dives.obs.list = lapply(dives.obs, function(d) d$dive)
-
-t.stages.list = lapply(dives.obs.list, function(d) {
-  seq(from = d$times[1], to = d$times[length(d$times)], length.out = 4)[2:3]
-})
-
-
-#
-# select dives for fitting
-#
-
-fit.inds = fit.ind.fn(dives.obs = dives.obs,
-                      duration_min = cfg$subset$duration_min,
-                      duration_max = cfg$subset$duration_max,
-                      holdout = cfg$validation$holdout,
-                      seed = cfg$validation$seed,
-                      holdout_prop = cfg$validation$proportion,
-                      bin_start_max = cfg$subset$bin_start_max,
-                      bin_end_max = cfg$subset$bin_end_max)
+n.dives = length(dives.processed$dive.flags)
 
 
 #
 # initial parameters
 #
 
-if(cfg$sampler$restart) {
-  # load existing output
-  load(file.path(out.dir, cfg$base_names$fit))
-  load(file.path(out.dir, cfg$base_names$fit_inds))
-  # reconfigure remaining samples to draw
-  it = nrow(state$theta)
-  cfg$sampler$iterations = cfg$sampler$iterations - it
-  # extract last params
-  params = list(
-    beta = state$theta[1:2],
-    lambda = state$theta[3:5]
-  )
-  t.stages = state$trace.t.stages[[it]]
-  offsets = state$trace.offsets[it,]
-  offsets.tf = state$trace.offsets.tf[it,]
-  # label state for merging
-  state.bak = state
-} else {
-  params = list(
-    beta = c(.95, .05),
-    lambda = c(1.25, .3, .5)
-  )
-  t.stages = t.stages.list[fit.inds$fit]
-  n = length(t.stages)
-  offsets = rep(0, n)
-  offsets.tf = rep(0, n)
-}
+
+params.deep = list(
+  pi = c(.95, .5, .05),
+  lambda = c(1.25, .3, .5)
+)
+
+params.shallow = list(
+  pi = c(.95, .05),
+  lambda = c(.6, .6)
+)
+
+
+# stage transition times
+Tmat = do.call(rbind, lapply(1:n.dives, function(dive.id) {
+  
+  T.init = rep(0,4)
+  
+  # find the dive record in the processed information
+  ranges_row = which(dives.processed$dive.ranges$dive.id == dive.id)
+  
+  if(length(ranges_row) > 0) {
+    
+    # set start time random effect
+    start_row = which(dives.processed$endpoint.inds$dive_start == dive.id)
+    T.init[1] = mean(unlist(
+      dives.processed$endpoint.inds[start_row, c('t_lwr', 't_upr')]
+    ))
+    
+    # set end time random effect
+    end_row = which(dives.processed$endpoint.inds$dive_end == dive.id)
+    T.init[4] = mean(unlist(
+      dives.processed$endpoint.inds[end_row, c('t_lwr', 't_upr')]
+    ))
+    
+    # get ranges of depth bins associated with dive
+    start_ind = dives.processed$dive.ranges$start.ind[ranges_row]
+    end_ind = dives.processed$dive.ranges$end.ind[ranges_row]
+    
+    # set initial stage transition times...
+    if(dives.processed$dive.ranges$type[ranges_row] == 1) {
+      # ...for deep dives
+      
+      # use 85% rule to estimate stage durations
+      stage_durations = times.stages(list(list(
+        dive = list(
+          depths = dives.processed$depths[start_ind:end_ind],
+          times = dives.processed$times[start_ind:end_ind]
+        ),
+        depth.bins = depth.bins
+      ))) * 60
+      
+      # convert to stage transition times
+      T.init[2] = T.init[1] + stage_durations$sub.time.min
+      T.init[3] = T.init[2] + stage_durations$bottom.time.min
+      
+    } else {
+      # ...for shallow dives
+  
+      # stop descent halfway through dive
+      T.init[2] = mean(T.init[c(1,4)])
+      # copy dive-end time
+      T.init[3] = T.init[4]
+    }
+    
+  }
+  
+  T.init
+}))
+
+colnames(Tmat) = paste('T', 0:3, sep='')
+
+# stage durations
+xi = t(apply(Tmat, 1, function(r) {
+  diff(r)
+}))
 
 
 #
@@ -168,58 +175,42 @@ lambda2.prior = gamma.param(mu = cfg$priors$forage_speed$mu,
 lambda3.prior = gamma.param(mu = cfg$priors$ascent_speed$mu,
                             sd = cfg$priors$ascent_speed$sd)
 
-times.stages.est = times.stages(dives.obs = dives.obs[fit.inds$fit])
-
-if(grepl(pattern = 'simulation', x = cfg$priors$name)) {
-  # load stage transition time priors for simulations from disk
-  load(file.path(cfg$data$path, '..', 'params', 'params.RData'))
-  T1.prior = list(estimate = params$T1.params)
-  T2.prior = list(estimate = params$T2.params)
-  # convert scale of prior parameters from minutes to seconds
-  T1.prior.params = T1.prior$estimate / c(1, 60)
-  T2.prior.params = T2.prior$estimate / c(1, 60)
-} else {
-
-  if(identical(cfg$priors$stage1_tx, 'empirical')) {
-    # use 85% rule to determine stage transition time priors
-    T1.prior = fitdistr(x = times.stages.est$sub.time.min, densfun = 'gamma')
-    # convert scale of prior parameters from minutes to seconds
-    T1.prior.params = T1.prior$estimate / c(1, 60)
-  } else {
-    T1.prior.params = gamma.param(mu = cfg$priors$stage1_tx$mu,
-                                  sd = cfg$priors$stage1_tx$sd)
-  }
-
-  if(identical(cfg$priors$stage2_tx, 'empirical')) {
-    # use 85% rule to determine stage transition time priors
-    T2.prior = fitdistr(x = times.stages.est$bottom.time.min, densfun = 'gamma')
-    # convert scale of prior parameters from minutes to seconds
-    T2.prior.params = T2.prior$estimate / c(1, 60)
-  } else {
-    T2.prior.params = gamma.param(mu = cfg$priors$stage2_tx$mu,
-                                  sd = cfg$priors$stage2_tx$sd)
-  }
-
-}
+lambda1.prior.shallow = gamma.param(mu = cfg$priors$descent_speed$mu/2,
+                            sd = cfg$priors$descent_speed$sd)
+lambda2.prior.shallow = gamma.param(mu = cfg$priors$forage_speed$mu/2,
+                            sd = cfg$priors$forage_speed$sd)
 
 
 #
-# flatten format for nimble
+# empirically determine stage duration priors for deep dives
 #
 
-depths = do.call(c, lapply(dives.obs.list[fit.inds$fit], function(d) d$depths))
+deep.inds = which(sapply(1:n.dives, function(dive.id) {
+  range_row = which(dives.processed$dive.ranges$dive.id == dive.id)
+  type = dives.processed$dive.ranges$type[range_row]
+  ifelse(length(type)==0, 0, type)
+}) == 1)
 
-times = do.call(c, lapply(dives.obs.list[fit.inds$fit], function(d) d$times))
+shallow.inds = which(sapply(1:n.dives, function(dive.id) {
+  range_row = which(dives.processed$dive.ranges$dive.id == dive.id)
+  type = dives.processed$dive.ranges$type[range_row]
+  ifelse(length(type)==0, 0, type)
+}) == 2)
 
-start.inds = c(1, 1 + cumsum(
-  do.call(c, lapply(dives.obs.list[fit.inds$fit], function(d) length(d$depths)))
-))
 
-n.dives = length(start.inds) - 1
+T1.prior = fitdistr(x = apply(Tmat[deep.inds,c('T0', 'T1')], 1, diff), 
+                    densfun = 'gamma')$estimate
+
+T2.prior = fitdistr(x = apply(Tmat[deep.inds,c('T1', 'T2')], 1, diff), 
+                    densfun = 'gamma')$estimate
+
+T1.prior.shallow = fitdistr(x = apply(Tmat[shallow.inds,c('T0', 'T1')], 1, 
+                                      diff), 
+                            densfun = 'gamma')$estimate
 
 
 #
 # construct nimble model, etc.
 #
 
-source('sketches/2020-06-04_nimble_implementation/methods/nimble_tools.R')
+# source('sketches/2020_06_15-nimble_demo/methods/nimble_tools.R')

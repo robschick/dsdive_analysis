@@ -94,6 +94,9 @@ o = optim(par = 0, function(theta) {
   cmodel$calculate()
 }, control = list(fnscale = -1), hessian = TRUE)
 
+cmodel$pi
+cmodel$lambda
+
 # stage 2 sampler
 cfg_mcmc$addSampler(
   target = 'log_lambda[2]', 
