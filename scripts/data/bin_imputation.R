@@ -90,7 +90,7 @@ fit.by.ind = lapply(1:16, function(ind) {
 # Output complete bins
 #
 
-max.depths = unique(bins_complete$MaxDepth)
+max.depths = sort(unique(bins_complete$MaxDepth))
 
 for(m in max.depths) {
   
@@ -117,6 +117,9 @@ for(m in max.depths) {
   ))
 }
 
+# save deepest observed depth bins 
+depths.deepest = obs
+
 
 #
 #  Impute missing depth bins
@@ -129,7 +132,7 @@ all(bins_missing %>%
   summarise(n.inds = max(bin.ind)) %>%
   select(n.inds) < 16)
 
-max.depths = unique(bins_missing$MaxDepth)
+max.depths = sort(unique(bins_missing$MaxDepth))
 for(m in max.depths) {
   
   # predict depth bins associated with MaxDepth == m
@@ -201,3 +204,12 @@ for(m in max.depths) {
                                         paste('bin', m, '.csv', sep='')), 
             row.names = FALSE)
 }
+
+
+# update absolute deepest set of depth bins
+if(max(pred.bins$center) > max(depths.deepest$center)) {
+  depths.deepest = pred.bins
+}
+
+# save absolute deepest set of depth bins as template
+write.csv(depths.deepest, file = file.path(out.dir, 'template.csv'))
