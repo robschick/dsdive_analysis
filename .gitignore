@@ -11,3 +11,5 @@ scrape_dates.txt
 *.so
 sketches/
 imputed_bins/
+*.rds
+*.pdf
