@@ -9,7 +9,7 @@ library(tidyr)
 # output directories
 #
 
-out.dir = file.path('data', 'labeled_tags')
+out.dir = file.path('data', 'tag_labels')
 dir.create(out.dir, recursive = TRUE)
 
 diagnostic.dir = file.path(out.dir, 'diagnostics')
