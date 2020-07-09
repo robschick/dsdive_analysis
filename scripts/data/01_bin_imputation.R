@@ -1,6 +1,6 @@
-library(dplyr)
-library(ggplot2)
-library(ggthemes)
+library(dplyr, lib.loc = c('singularity/libs', .libPaths()))
+library(ggplot2, lib.loc = c('singularity/libs', .libPaths()))
+library(ggthemes, lib.loc = c('singularity/libs', .libPaths()))
 
 
 rm(list = ls())

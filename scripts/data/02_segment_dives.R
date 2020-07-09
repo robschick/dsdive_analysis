@@ -1,8 +1,8 @@
-library(anytime)
-library(parallel)
-library(stringr)
-library(dplyr)
-library(tidyr)
+library(anytime, lib.loc = c('singularity/libs', .libPaths()))
+library(parallel, lib.loc = c('singularity/libs', .libPaths()))
+library(stringr, lib.loc = c('singularity/libs', .libPaths()))
+library(dplyr, lib.loc = c('singularity/libs', .libPaths()))
+library(tidyr, lib.loc = c('singularity/libs', .libPaths()))
 
 
 #
