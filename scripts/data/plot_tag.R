@@ -1,7 +1,7 @@
-library(lubridate)
-library(ggplot2)
-library(ggthemes)
-library(dplyr)
+library(lubridate, lib.loc = c('singularity/libs', .libPaths()))
+library(ggplot2, lib.loc = c('singularity/libs', .libPaths()))
+library(ggthemes, lib.loc = c('singularity/libs', .libPaths()))
+library(dplyr, lib.loc = c('singularity/libs', .libPaths()))
 
 tagplot = function(depths, depth.bins, dives.labeled, date_range = NULL) {
   
