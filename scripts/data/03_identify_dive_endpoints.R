@@ -1,6 +1,6 @@
-library(anytime)
-library(stringr)
-library(dplyr)
+library(anytime, lib.loc = c('singularity/libs', .libPaths()))
+library(stringr, lib.loc = c('singularity/libs', .libPaths()))
+library(dplyr, lib.loc = c('singularity/libs', .libPaths()))
 
 # output directory
 out.dir = file.path('data', 'tag_endpoints')
@@ -94,6 +94,9 @@ tag.records = lapply(tag.files, function(f) {
   # remove duplicate rows
   endpoint.inds = unique(endpoint.inds)
   
+  # assign ids to endpoints
+  endpoint.inds$endpoint.id = 1:nrow(endpoint.inds)
+  
   # # verify each random effect is associated with at most one dive start/end
   # table(endpoint.inds$dive_end)[table(endpoint.inds$dive_end) > 1]
   # table(endpoint.inds$dive_start)[table(endpoint.inds$dive_start) > 1]
@@ -126,10 +129,21 @@ tag.records = lapply(tag.files, function(f) {
   dive.ranges = dive.ranges[complete.cases(dive.ranges),]
   
   # add indicator for whether dive is deep (type == 1) or shallow (type == 2)
-  dive.ranges$type = as.numeric(apply(dive.ranges, 1, function(r) {
+  dive.ranges$type = factor(apply(dive.ranges, 1, function(r) {
     max_d = depth.bins$center[max(d$depth.bin[r['start.ind']:r['end.ind']])]
-    ifelse(max_d > 800, 1, 2)
+    ifelse(max_d > 800, 'Deep', 'Shallow')
   }))
+  
+  # add endpoint links to dive information
+  dive.ranges = dive.ranges %>% 
+    # link T0 endpoint
+    left_join(endpoint.inds %>% mutate(T0_endpoint = endpoint.id) %>% 
+                select(T0_endpoint, dive_start), 
+              by = c(dive.id = 'dive_start')) %>% 
+    # link T3 endpoint
+    left_join(endpoint.inds %>% mutate(T3_endpoint = endpoint.id) %>% 
+                select(T3_endpoint, dive_end),
+              by = c(dive.id = 'dive_end'))
   
   #
   # (quality control) determine which dives to analyze
@@ -174,7 +188,9 @@ tag.records = lapply(tag.files, function(f) {
     dive.flags = dive.flags,
     # depth and time observations
     depths = obs$depths,
-    times = obs$times
+    times = obs$times,
+    # label
+    name = tag.name
   )
   
   # save pre-processed dives
