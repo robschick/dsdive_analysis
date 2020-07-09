@@ -45,6 +45,14 @@ singularity exec rmovement.sif install2.r -l libs bigmemory
 singularity exec rmovement.sif install2.r -l libs Rdsm
 singularity exec rmovement.sif install2.r -l libs fields
 singularity exec rmovement.sif install2.r -l libs nimble
+singularity exec rmovement.sif install2.r -l libs MASS
+singularity exec rmovement.sif install2.r -l libs dplyr
+singularity exec rmovement.sif install2.r -l libs lubridate
+singularity exec rmovement.sif install2.r -l libs ggplot2
+singularity exec rmovement.sif install2.r -l libs ggthemes
+singularity exec rmovement.sif install2.r -l libs anytime
+singularity exec rmovement.sif install2.r -l libs stringr
+singularity exec rmovement.sif install2.r -l libs tidyr
 singularity exec rmovement.sif install2.r -l libs -r NULL ./composr
 singularity exec rmovement.sif install2.r -l libs -r NULL ./dsdive
 
