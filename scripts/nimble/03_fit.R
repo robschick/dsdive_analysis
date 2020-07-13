@@ -1,4 +1,4 @@
-library(nimble, lib.loc = c('singularity/libs', .libPaths()))
+library(nimble)
 
 # output directory
 out.dir = file.path('output', 'multitag')
