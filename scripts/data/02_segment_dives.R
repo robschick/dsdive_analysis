@@ -37,7 +37,7 @@ merge.seq = seq(from = .005, to = .99, by = .01)
 # set up parallellization
 #
 
-cl = makeCluster(spec = detectCores() - 1, type = 'SOCK')
+cl = makeCluster(spec = detectCores(), type = 'SOCK')
 
 clusterEvalQ(cl, library(anytime))
 clusterEvalQ(cl, library(stringr))
