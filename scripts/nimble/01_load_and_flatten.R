@@ -33,7 +33,7 @@ for(i in 1:length(dive.data)) {
   # extract sex of tagged whale
   nim_pkg$consts$tag_covariates = c(
     nim_pkg$consts$tag_covariates,
-    as.numeric(tag.sex %>% filter(deployid == name) %>% select(sex))
+    as.numeric(tag.sex %>% filter(deployid == name) %>% select(sex)) - 1
   )
   
   # id's of dives to keep from record
