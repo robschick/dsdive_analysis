@@ -14,21 +14,21 @@ date
 START=`date +%s`
 
 singularity exec singularity/rmovement.sif R CMD BATCH --no-save --no-restore \
-  "scripts/data/01_bin_imputation.R" fit_${SLURM_JOB_NAME}.Rout
+  "scripts/data/01_bin_imputation.R" 01_bin_imputation_${SLURM_JOB_NAME}.Rout
 
 singularity exec singularity/rmovement.sif R CMD BATCH --no-save --no-restore \
-  "scripts/data/02_segment_dives.R" fit_${SLURM_JOB_NAME}.Rout
+  "scripts/data/02_segment_dives.R" 02_segment_dives_${SLURM_JOB_NAME}.Rout
 
 singularity exec singularity/rmovement.sif R CMD BATCH --no-save --no-restore \
-  "scripts/data/03_identify_dive_endpoints.R" fit_${SLURM_JOB_NAME}.Rout
+  "scripts/data/03_identify_dive_endpoints.R" 03_identify_dive_endpoints.R_${SLURM_JOB_NAME}.Rout
 
 singularity exec singularity/rmovement.sif R CMD BATCH --no-save --no-restore \
-  "scripts/nimble/01_load_and_flatten.R" fit_${SLURM_JOB_NAME}.Rout
+  "scripts/nimble/01_load_and_flatten.R" 01_load_and_flatten_${SLURM_JOB_NAME}.Rout
 
 singularity exec singularity/rmovement.sif R CMD BATCH --no-save --no-restore \
-  "scripts/nimble/02_priors_and_initialization.R" fit_${SLURM_JOB_NAME}.Rout
+  "scripts/nimble/02_priors_and_initialization.R" 02_priors_and_initialization_${SLURM_JOB_NAME}.Rout
 
-singularity exec singularity/rmovement.sif R CMD BATCH --no-save --no-restore \
+R CMD BATCH --no-save --no-restore \
   "scripts/nimble/03_fit.R" fit_${SLURM_JOB_NAME}.Rout
 
 END=`date +%s`
