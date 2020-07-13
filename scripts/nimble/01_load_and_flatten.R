@@ -8,6 +8,9 @@ dive.data = lapply(dive.files, function(f) readRDS(f))
 # template bins
 depth.bins = read.csv(file.path('data', 'imputed_bins', 'template.csv'))
 
+# sex information for tag
+tag.sex = read.csv(file.path('data', 'raw', 'tag_sex.csv'))
+
 # initialize flattened structures
 nim_pkg = list(
   data = list(
@@ -16,7 +19,8 @@ nim_pkg = list(
   ),
   consts = list(
     endpoint_priors = NULL,
-    dive_relations = NULL
+    dive_relations = NULL,
+    tag_covariates = NULL
   ),
   inits = list()
 )
@@ -25,6 +29,12 @@ nim_pkg = list(
 for(i in 1:length(dive.data)) {
   
   attach(dive.data[[i]])
+  
+  # extract sex of tagged whale
+  nim_pkg$consts$tag_covariates = c(
+    nim_pkg$consts$tag_covariates,
+    as.numeric(tag.sex %>% filter(deployid == name) %>% select(sex))
+  )
   
   # id's of dives to keep from record
   dive.ids = intersect(which(dive.flags),
