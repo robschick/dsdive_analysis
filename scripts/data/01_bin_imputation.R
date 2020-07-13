@@ -190,10 +190,10 @@ for(m in max.depths) {
   # output diagnostic plots
   ggsave(pl, file = file.path(diagnostic.dir, 
                               paste('imputed_bins_', m, '.png', sep = '')),
-         width = 5, height = 5)
+         width = 5, height = 5, type = 'cairo')
   ggsave(pl.truth, file = file.path(diagnostic.dir, 
                               paste('observed_bins_', m, '.png', sep = '')),
-         width = 5, height = 5)
+         width = 5, height = 5, type = 'cairo')
   
   # format and save depth bins
   pred.bins = pred.bins[,1:2]
