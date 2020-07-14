@@ -37,6 +37,9 @@ if(is.infinite(cmodel$calculate())) {
 
 cfg_mcmc = configureMCMC(cmodel, print = TRUE)
 
+# monitor dive-specific random effects
+cfg_mcmc$addMonitors(c('pi', 'lambda'))
+
 
 ##
 ## semi-warm start for model parameters, and use covariances for RW proposals
