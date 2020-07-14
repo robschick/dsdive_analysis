@@ -41,7 +41,7 @@ for(i in 1:length(dive.data)) {
                        dive.ranges$dive.id[dive.ranges$type == 'Deep'])
   dive.ids = intersect(dive.ids, 
                        which(dive.ranges$end.ind - dive.ranges$start.ind + 1 > 
-                               2))
+                               3))
   
   # id's of endpoints to keep from record
   endpoint.ids = endpoint.inds %>% 
