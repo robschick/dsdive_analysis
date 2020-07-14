@@ -9,22 +9,46 @@ modelCode = nimbleCode({
   # priors
   #
   
+  # population level directional preferences
+  for(i in c(1,3)) {
+    for(j in 1:2) {
+      beta_pi[i, j] ~ dnorm(mean = beta_pi_prior_mean[i, j], 
+                            sd = beta_pi_prior_sd[i, j])
+    }
+    sigma_pi[i] ~ dinvgamma(shape = sigma_pi_priors[i, 1], 
+                            rate = sigma_pi_priors[i, 2])
+  }
+  
+  # population level speeds
+  for(i in 1:3) {
+    for(j in 1:2) {
+      beta_lambda[i, j] ~ dnorm(mean = beta_lambda_prior_mean[i, j], 
+                                sd = beta_lambda_prior_sd[i, j])
+    }
+    sigma_lambda[i] ~ dinvgamma(shape = sigma_lambda_priors[i, 1],
+                                rate = sigma_lambda_priors[i, 2])
+  }
+  
+  # tag-level movement parameters
   for(tagInd in 1:N_tags) {
     
     # directional preferences
-    logit_pi[tagInd, 1] ~ dlogitBeta(shape1 = pi_priors[1, 1], 
-                                     shape2 = pi_priors[1, 2])
-    logit_pi[tagInd, 3] ~ dlogitBeta(shape1 = pi_priors[2, 1], 
-                                     shape2 = pi_priors[2, 2])
-    
-    # transformed parameters, for sampling
-    pi[tagInd, 1] <- ilogit(logit_pi[tagInd, 1])
-    pi[tagInd, 3] <- ilogit(logit_pi[tagInd, 3])
+    for(i in c(1,3)) {
+      # prior
+      logit_pi[tagInd, i] ~ dnorm(
+        mean = beta_pi[i, 1] + beta_pi[i, 2] * tag_covariates[tagInd],
+        var = sigma_pi[i]
+      )
+      # transformed parameters, for sampling
+      pi[tagInd, i] <- ilogit(logit_pi[tagInd, i])
+    }
     
     # speeds and CTMC generator decompositions
     for(i in 1:3) {
-      log_lambda[tagInd, i] ~ dlogGamma(shape = lambda_priors[i, 1], 
-                                        rate = lambda_priors[i, 2])
+      log_lambda[tagInd, i] ~ dnorm(
+        mean = beta_lambda[i, 1] + beta_lambda[i, 2] * tag_covariates[tagInd],
+        var = sigma_lambda[i]
+      )
       
       # transformed parameters, for sampling
       lambda[tagInd, i] <- exp(log_lambda[tagInd, i])

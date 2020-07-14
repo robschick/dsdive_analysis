@@ -68,20 +68,58 @@ for(i in 1:nrow(duration_priors)) {
 }
 
 
+
+#
+# random effect and covariate priors
+#
+
+
+# prior means for logit-pi model coefficients
+nim_pkg$consts$beta_pi_prior_mean = rbind(
+  c(intercept = qlogis(.95), sex = 0),
+  c(intercept = qlogis(.5), sex = 0),
+  c(intercept = qlogis(.05), sex = 0)
+)
+
+# prior uncertainty for logit-pi model coefficients
+nim_pkg$consts$beta_pi_prior_sd = rbind(
+  c(intercept = 1, sex = 1),
+  c(intercept = 0, sex = 0),
+  c(intercept = 1, sex = 1)
+)
+
+# prior distribution for logit-pi model random effect scale
+nim_pkg$consts$sigma_pi_priors = rbind(
+  c(shape = 2, rate = 1),
+  c(shape = 0, rate = 0),
+  c(shape = 2, rate = 1)
+)
+
+# prior means for log-lambda model coefficient
+nim_pkg$consts$beta_lambda_prior_mean = rbind(
+  c(intercept = log(1.5), sex = 0),
+  c(intercept = log(.3), sex = 0),
+  c(intercept = log(1), sex = 0)
+)
+
+# prior uncertainty for log-lambda model coefficients
+nim_pkg$consts$beta_lambda_prior_sd = rbind(
+  c(intercept = 1, sex = 1),
+  c(intercept = 1, sex = 1),
+  c(intercept = 1, sex = 1)
+)
+
+# prior distribution for log-lambda model random effect scale
+nim_pkg$consts$sigma_lambda_priors = rbind(
+  c(shape = 2, rate = 1),
+  c(shape = 2, rate = 1),
+  c(shape = 2, rate = 1)
+)
+
+
 #
 # set initial values for random variables
 #
-
-nim_pkg$consts$pi_priors = rbind(
-  c(shape1 = 18, shape2 = 2),
-  c(shape1 = 2, shape2 = 18)
-)
-
-nim_pkg$consts$lambda_priors = rbind(
-  c(shape = 225, rate = 150),
-  c(shape = 1, rate = 3.33),
-  c(shape = 12.25, rate = 17.5)
-)
   
 nim_pkg$inits$endpoints = runif(
   n = nim_pkg$consts$N_endpoints, 
@@ -116,13 +154,35 @@ all(
   nim_pkg$inits$T[,'T2'] < nim_pkg$inits$T[,'T3']
 )
 
-nim_pkg$inits$pi = matrix(c(.95, .5, .05), nrow = nim_pkg$consts$N_tags, 
-                          ncol = 3, byrow = TRUE)
-nim_pkg$inits$logit_pi = qlogis(nim_pkg$inits$pi)
 
-nim_pkg$inits$lambda = matrix(c(1.6, .3, 1), nrow = nim_pkg$consts$N_tags, 
-                              ncol = 3, byrow = TRUE)
-nim_pkg$inits$log_lambda = log(nim_pkg$inits$lambda)
+nim_pkg$inits$beta_pi = nim_pkg$consts$beta_pi_prior_mean
+
+nim_pkg$inits$logit_pi = matrix(
+  rep(nim_pkg$consts$beta_pi_prior_mean[,'intercept'], nim_pkg$consts$N_tags), 
+  ncol = 3, byrow = TRUE
+)
+
+nim_pkg$inits$pi = plogis(nim_pkg$inits$logit_pi)
+
+
+nim_pkg$inits$beta_lambda = nim_pkg$consts$beta_lambda_prior_mean
+
+nim_pkg$inits$log_lambda = matrix(
+  rep(nim_pkg$consts$beta_lambda_prior_mean[,'intercept'], 
+      nim_pkg$consts$N_tags),
+  ncol = 3, byrow = TRUE
+)
+  
+nim_pkg$inits$lambda = exp(nim_pkg$inits$log_lambda)
+
+nim_pkg$inits$sigma_pi = apply(nim_pkg$consts$sigma_pi_priors, 1, function(r) {
+  rgamma(n = 1, shape = r['shape'], rate = r['rate'])
+})
+
+nim_pkg$inits$sigma_lambda = apply(nim_pkg$consts$sigma_lambda_priors, 1, 
+                                   function(r) {
+  rgamma(n = 1, shape = r['shape'], rate = r['rate'])
+})
 
 # save nimble-formatted data and inits
 saveRDS(nim_pkg, file = file.path(out.dir, 'nim_pkg.rds'))

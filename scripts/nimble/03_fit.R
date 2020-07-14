@@ -24,9 +24,16 @@ dive_model = nimbleModel(code = modelCode, constants = nim_pkg$consts,
                          data = nim_pkg$data, inits = nim_pkg$inits, 
                          name = 'dives')
 
+dive_model$initializeInfo()
+
 cmodel = compileNimble(dive_model)
 
-cmodel$calculate()
+if(is.infinite(cmodel$calculate())) {
+  cmodel.names = cmodel$getNodeNames()
+  ll.nodes = sapply(cmodel.names, function(x) cmodel$calculate(x))
+  names.inf = cmodel.names[which(is.infinite(ll.nodes))]
+  print(names.inf)
+}
 
 cfg_mcmc = configureMCMC(cmodel, print = TRUE)
 
@@ -129,7 +136,9 @@ cfg_mcmc$removeSamplers('log_xi')
 
 for(i in 1:nim_pkg$consts$N_dives) {
   
-  message(paste('dive:', i))
+  if(i %% 50 == 0) {
+    message(paste('dive:', i))
+  }
   
   tgt = paste('log_xi[', i, ', 1:2]', sep = '')
   deps = cmodel$getDependencies(tgt)
@@ -155,8 +164,6 @@ for(i in 1:nim_pkg$consts$N_dives) {
 #
 
 model_mcmc = buildMCMC(cfg_mcmc)
-
-# options(error = quote(dump.frames("testdump", TRUE)))
 
 cmcmc = compileNimble(model_mcmc, projectName = 'ctdsDives')
 
