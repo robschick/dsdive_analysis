@@ -38,23 +38,23 @@ echo Installing packages into singularity image...
 
 singularity exec rmovement.sif install2.r -l libs Rmpi
 singularity exec rmovement.sif install2.r -l libs -r NULL ./snow_custom_error_dump
-singularity exec rmovement.sif install2.r -l libs pracma
-singularity exec rmovement.sif install2.r -l libs yaml
-singularity exec rmovement.sif install2.r -l libs expm
-singularity exec rmovement.sif install2.r -l libs bigmemory
-singularity exec rmovement.sif install2.r -l libs Rdsm
-singularity exec rmovement.sif install2.r -l libs fields
-singularity exec rmovement.sif install2.r -l libs nimble
-singularity exec rmovement.sif install2.r -l libs MASS
-singularity exec rmovement.sif install2.r -l libs dplyr
-singularity exec rmovement.sif install2.r -l libs lubridate
-singularity exec rmovement.sif install2.r -l libs ggplot2
-singularity exec rmovement.sif install2.r -l libs ggthemes
-singularity exec rmovement.sif install2.r -l libs anytime
-singularity exec rmovement.sif install2.r -l libs stringr
-singularity exec rmovement.sif install2.r -l libs tidyr
-singularity exec rmovement.sif install2.r -l libs -r NULL ./composr
-singularity exec rmovement.sif install2.r -l libs -r NULL ./dsdive
+singularity exec rmovement.sif install2.r -l libs -s pracma
+singularity exec rmovement.sif install2.r -l libs -s yaml
+singularity exec rmovement.sif install2.r -l libs -s expm
+singularity exec rmovement.sif install2.r -l libs -s bigmemory
+singularity exec rmovement.sif install2.r -l libs -s Rdsm
+singularity exec rmovement.sif install2.r -l libs -s fields
+singularity exec rmovement.sif install2.r -l libs -s nimble
+singularity exec rmovement.sif install2.r -l libs -s MASS
+singularity exec rmovement.sif install2.r -l libs -s dplyr
+singularity exec rmovement.sif install2.r -l libs -s lubridate
+singularity exec rmovement.sif install2.r -l libs -s ggplot2
+singularity exec rmovement.sif install2.r -l libs -s ggthemes
+singularity exec rmovement.sif install2.r -l libs -s anytime
+singularity exec rmovement.sif install2.r -l libs -s stringr
+singularity exec rmovement.sif install2.r -l libs -s tidyr
+singularity exec rmovement.sif install2.r -l libs -s -r NULL ./composr
+singularity exec rmovement.sif install2.r -l libs -s -r NULL ./dsdive
 
 
 echo Updating RMPI snow profile...
