@@ -9,3 +9,5 @@ output/
 scrape_dates.txt
 *.o
 *.so
+*.csv
+*.rds
