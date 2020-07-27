@@ -147,8 +147,8 @@ pl = ggplot(labels.diagnostics %>%
   theme(panel.background = element_blank(), strip.placement = 'inside') + 
   ggtitle('(Solid: mean across tags; Dotted: 25% and 75% quantiles)')
 
-ggsave(pl, filename = file.path(diagnostic.dir, 'dives_per_ratio.pdf'), 
-       type = 'cairo')
+ggsave(pl, filename = file.path(diagnostic.dir, 'dives_per_ratio.pdf'))#, 
+       #type = 'cairo')
 
 
 
@@ -171,8 +171,8 @@ pl = ggplot(labels.diagnostics %>%
   theme(panel.background = element_blank(), strip.placement = 'inside') + 
   ggtitle('(Solid: mean across tags; Dotted: Est. 25% and 75% quantiles)')
 
-ggsave(pl, filename = file.path(diagnostic.dir, 'durations_per_ratio.pdf'),
-       type = 'cairo')
+ggsave(pl, filename = file.path(diagnostic.dir, 'durations_per_ratio.pdf'))#,
+       # type = 'cairo')
 
 
 
@@ -201,7 +201,7 @@ mapply(FUN = function(record, ratio) {
   # save plot of dive record 
   ggsave(pl, filename = file.path(out.dir, 
                                   paste(record$name, '.pdf', sep = '')),
-         dpi = 'print', height = 12, width = 12*12, type = 'cairo',
+         dpi = 'print', height = 12, width = 12*12, #type = 'cairo',
          limitsize = FALSE)
   
   # save dive labels
