@@ -1,0 +1,56 @@
+---
+title: "Deep Dive Duration"
+author: "Rob Schick"
+date: "7/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Work with Processed Dives
+
+We start with the endpoints data files, e.g. `ZcTag084_endpoints.rds` to summarize the duration and number of dives. Here I'll show one example animal to make sure we're on the same page.
+
+```{r}
+zc084 <- read_rds(here::here('data/tag_endpoints', 'ZcTag084_endpoints.rds'))
+```
+
+
+My summary logic is as follows:
+
+1. Select the deep dives from the `dive.ranges` data frame
+2. Tally these
+3. Use the `start.ind` to cull from `endpoints.inds`
+4. Summarize the duration of each dive with `t_lwr` and `t_upr`
+5. Use ancillary metadata on CEEs to pare these down before certain dates
+
+```{r}
+zc084_dive_ids <- zc084$dive.ranges %>% 
+  filter(type == 'Deep') %>% 
+  select(start.ind)
+zc084_dives_end <- zc084$endpoint.inds %>% 
+  filter(ind %in% zc084_dive_ids$start.ind) %>% 
+  select(c(ind, t_lwr, t_upr))
+```
+
+We get the number of deep dives:
+
+```{r}
+zc084_dives_end %>% 
+  summarize(num_dives = n())
+```
+
+And the duration:
+
+```{r}
+zc084_dives_end %>% 
+  mutate(duration = t_upr - t_lwr) %>% 
+  summarise(mean_dur = mean(duration))
+```
+
+But that doesn't seem right to me.
+
+## Filter Based on CEE
